@@ -9,6 +9,8 @@ project(
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#add_compile_options(-Wall -Wextra -pedantic -Werror -Wno-unused-parameter)
+add_compile_options(-Wall -Wextra -pedantic -Werror )
 
 set(CMAKE_BUILD_TYPE Debug)
 

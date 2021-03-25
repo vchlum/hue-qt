@@ -21,73 +21,65 @@
 
 #include "menuswitch.h"
 
-MenuSwitch::MenuSwitch(QWidget *parent) : QAbstractButton(parent),
-_height(16),
-_opacity(0.000),
-_switch(false),
-_margin(3),
-_thumb("#d5d5d5"),
-_anim(new QPropertyAnimation(this, "offset", this))
+MenuSwitch::MenuSwitch(QWidget *parent) : QAbstractButton(parent)
 {
-    setOffset(_height / 2);
-    _y = _height / 2;
-    setBrush(QColor("#2E2E2E"));
+    animation = new QPropertyAnimation(this, "offset", this);
+    setOffset(tmp_height / 2);
+    y = tmp_height / 2;
+    brush = QBrush((QColor("#2E2E2E")));
 }
 
-MenuSwitch::MenuSwitch(const QBrush &brush, QWidget *parent) : QAbstractButton(parent),
-_height(16),
-_switch(false),
-_opacity(0.000),
-_margin(3),
-_thumb("#d5d5d5"),
-_anim(new QPropertyAnimation(this, "offset", this))
+MenuSwitch::MenuSwitch(const QBrush &brsh, QWidget *parent) : QAbstractButton(parent)
 {
-    setOffset(_height / 2);
-    _y = _height / 2;
-    setBrush(brush);
+    animation = new QPropertyAnimation(this, "offset", this);
+    setOffset(tmp_height / 2);
+    y = tmp_height / 2;
+    brush = brsh;
 }
 
 void MenuSwitch::paintEvent(QPaintEvent *e) {
+    (void) e;
+
     QPainter p(this);
     p.setPen(Qt::NoPen);
     if (isEnabled()) {
-        p.setBrush(_switch ? brush() : Qt::black);
-        p.setOpacity(_switch ? 0.5 : 0.38);
+        p.setBrush(state ? brush : Qt::black);
+        p.setOpacity(state ? 0.5 : 0.38);
         p.setRenderHint(QPainter::Antialiasing, true);
-        p.drawRoundedRect(QRect(_margin, _margin, width() - 2 * _margin, height() - 2 * _margin), 5.0, 5.0);
-        p.setBrush(_switch ? brush() : _thumb);
+        p.drawRoundedRect(QRect(margin, margin, width() - 2 * margin, height() - 2 * margin), 5.0, 5.0);
+        p.setBrush(state ? brush : thumb);
         p.setOpacity(1.0);
-        //p.drawEllipse(QRectF(offset() - (_height / 2), _y - (_height / 2), height(), height()));
-        p.drawRoundedRect(QRect(offset() - (_height / 2), _y - (_height / 2), height(), height()), 5.0, 5.0);
+        //p.drawEllipse(QRectF(offset() - (tmp_height / 2), y - (tmp_height / 2), height(), height()));
+        p.drawRoundedRect(QRect(offset() - (tmp_height / 2), y - (tmp_height / 2), height(), height()), 5.0, 5.0);
     } else {
         p.setBrush(Qt::black);
         p.setOpacity(0.12);
-        p.drawRoundedRect(QRect(_margin, _margin, width() - 2 * _margin, height() - 2 * _margin), 8.0, 8.0);
+        p.drawRoundedRect(QRect(margin, margin, width() - 2 * margin, height() - 2 * margin), 8.0, 8.0);
         p.setOpacity(1.0);
         p.setBrush(QColor("#BDBDBD"));
-        p.drawEllipse(QRectF(offset() - (_height / 2), _y - (_height / 2), height(), height()));
+        p.drawEllipse(QRectF(offset() - (tmp_height / 2), y - (tmp_height / 2), height(), height()));
     }
 }
 
 void MenuSwitch::doAnimatedSwitch()
 {
-    if (_switch) {
-        _anim->setStartValue(_height / 2);
-        _anim->setEndValue(width() - _height);
-        _anim->setDuration(120);
-        _anim->start();
+    if (state) {
+        animation->setStartValue(tmp_height / 2);
+        animation->setEndValue(width() - tmp_height);
+        animation->setDuration(120);
+        animation->start();
     } else {
-        _anim->setStartValue(offset());
-        _anim->setEndValue(_height / 2);
-        _anim->setDuration(120);
-        _anim->start();
+        animation->setStartValue(offset());
+        animation->setEndValue(tmp_height / 2);
+        animation->setDuration(120);
+        animation->start();
     }
 }
 
 void MenuSwitch::mouseReleaseEvent(QMouseEvent *e) {
     if (e->button() & Qt::LeftButton) {
-        _switch = _switch ? false : true;
-        _thumb = _switch ? _brush : QBrush("#d5d5d5");
+        state = state ? false : true;
+        thumb = state ? brush : QBrush("#d5d5d5");
         doAnimatedSwitch();
     }
     QAbstractButton::mouseReleaseEvent(e);
@@ -99,21 +91,21 @@ void MenuSwitch::enterEvent(QEnterEvent *e) {
 }
 
 QSize MenuSwitch::sizeHint() const {
-    return QSize(2 * (_height + _margin), _height + 2 * _margin);
+    return QSize(2 * (tmp_height + margin), tmp_height + 2 * margin);
 }
 
 void MenuSwitch::setColor(QColor color)
 {
-    setBrush(color);
+    brush = QBrush(color);
     repaint();
 }
 
 void MenuSwitch::setValue(bool on){
-    if (on != _switch) {
-        _switch = on;
+    if (on != state) {
+        state = on;
 
-        if (!_switch) {
-            _thumb = QBrush("#d5d5d5");
+        if (!state) {
+            thumb = QBrush("#d5d5d5");
             repaint();
         }
 
@@ -122,5 +114,5 @@ void MenuSwitch::setValue(bool on){
 }
 
 bool MenuSwitch::value(){
-    return _switch;
+    return state;
 }

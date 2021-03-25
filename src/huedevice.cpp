@@ -30,6 +30,8 @@ HueDevice::HueDevice(QString address, QObject *parent): QObject(parent)
 }
 
 void HueDevice::onSslError(QNetworkReply* r, QList<QSslError> l) {
+    (void) l;
+
     r->ignoreSslErrors();
 }
 

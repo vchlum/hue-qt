@@ -68,13 +68,6 @@ void HueBridgeList::needSave()
     emit bridgeDataUpdated();
 }
 
-void HueBridgeList::checkBridges()
-{
-    foreach(HueBridge *bridge, list) {
-
-    }
-}
-
 void HueBridgeList::createBridge(QJsonObject data, QString ip, bool on_load)
 {
     HueBridge *bridge = NULL;

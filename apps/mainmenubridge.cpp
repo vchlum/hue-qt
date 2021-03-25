@@ -103,7 +103,7 @@ void BridgeWidget::sceneClicked()
     bridge->putScene(btn->id(), json);
 }
 
-void BridgeWidget::removeFromButtonList(QString main_id)
+void BridgeWidget::removeFromButtonList()
 {
     MenuButton *btn = qobject_cast<MenuButton *>(sender());
 
@@ -473,7 +473,7 @@ MenuButton* BridgeWidget::createMenuButton(
     button = new MenuButton(id, state.has_dimming, state.gradient_points_capable, back_button, state.has_on, menu);
 
     if (!state.dummy) {
-        connect(button, SIGNAL(buttonRemoved(QString)), this, SLOT(removeFromButtonList(QString)));
+        connect(button, SIGNAL(buttonRemoved(QString)), this, SLOT(removeFromButtonList()));
     }
 
     if (custom_icon != "") {

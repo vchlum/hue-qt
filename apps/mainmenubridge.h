@@ -176,7 +176,7 @@ class BridgeWidget : public QWidget
         void groupClicked();
         void lightClicked();
         void sceneClicked();
-        void removeFromButtonList(QString main_id);
+        void removeFromButtonList();
 
         void switchId(QString id, bool on);
         void dimmId(QString id, int value);

@@ -27,7 +27,6 @@ class MenuSwitch : public QAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(int offset READ offset WRITE setOffset)
-    Q_PROPERTY(QBrush brush READ brush WRITE setBrush)
 
     public:
         MenuSwitch(QWidget* parent = nullptr);
@@ -36,18 +35,11 @@ class MenuSwitch : public QAbstractButton
 
         QSize sizeHint() const override;
 
-        QBrush brush() const {
-            return _brush;
-        }
-        void setBrush(const QBrush &brsh) {
-            _brush = brsh;
-        }
-
         int offset() const {
-            return _x;
+            return x;
         }
         void setOffset(int o) {
-            _x = o;
+            x = o;
             update();
         }
 
@@ -60,11 +52,14 @@ class MenuSwitch : public QAbstractButton
         void enterEvent(QEnterEvent*);
 
     private:
-        bool _switch;
-        qreal _opacity;
-        int _x, _y, _height, _margin;
-        QBrush _thumb, _track, _brush;
-        QPropertyAnimation *_anim = nullptr;
+        bool state = false;
+        int x;
+        int y;
+        int tmp_height = 16;
+        int margin = 3;
+        QBrush thumb = QBrush("#d5d5d5");
+        QBrush brush;
+        QPropertyAnimation *animation = nullptr;
         void doAnimatedSwitch();
 };
 

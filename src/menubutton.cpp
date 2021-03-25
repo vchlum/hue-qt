@@ -21,11 +21,18 @@
 #include "menuutils.h"
 
 ClickableLabel::ClickableLabel(QWidget* parent, Qt::WindowFlags f) : QLabel(parent)
-{}
+{
+    (void) f;
+}
 
-ClickableLabel::~ClickableLabel() {}
+ClickableLabel::~ClickableLabel()
+{
+}
 
-void ClickableLabel::mousePressEvent(QMouseEvent* event) {
+void ClickableLabel::mousePressEvent(QMouseEvent* event)
+{
+    (void) event;
+
     emit clicked();
 }
 

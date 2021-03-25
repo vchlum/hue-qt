@@ -75,16 +75,22 @@ void SyncboxWidget::checkSyncbox()
 
 void SyncboxWidget::changePower(QString id, bool on)
 {
+    (void) id;
+
     syncbox->setPower(on);
 }
 
 void SyncboxWidget::changeBrightness(QString id, int value)
 {
+    (void) id;
+
     syncbox->setBrightness(value);
 }
 
 void SyncboxWidget::changeSync(QString id, bool on)
 {
+    (void) id;
+
     syncbox->setSync(on);
 }
 

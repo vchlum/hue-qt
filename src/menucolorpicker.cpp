@@ -23,6 +23,8 @@ ColorWheel::ColorWheel(QWidget *parent): QWidget(parent)
 
 void ColorWheel::paintEvent(QPaintEvent *e)
 {
+    (void) e;
+
     QPointF center = QPointF(width()/2, height()/2);
     QPainter painter(this);
 
@@ -47,6 +49,8 @@ void ColorWheel::paintEvent(QPaintEvent *e)
 
 void ColorWheel::resizeEvent(QResizeEvent *e)
 {
+    (void) e;
+
     radius = qMin(width() / 2, height() / 2);
 }
 
@@ -88,7 +92,9 @@ TemperatureBox::TemperatureBox(QWidget *parent): QWidget(parent)
 
 void TemperatureBox::paintEvent(QPaintEvent *e)
 {
-    QPointF center = QPointF(width()/2, height()/2);
+    (void) e;
+
+    //QPointF center = QPointF(width()/2, height()/2);
     QPainter painter(this);
 
     painter.setViewport(margin, margin, width() - 2 * margin, height() - 2 * margin);
@@ -108,6 +114,8 @@ void TemperatureBox::paintEvent(QPaintEvent *e)
 
 void TemperatureBox::resizeEvent(QResizeEvent *e)
 {
+    (void) e;
+
     radius = qMin(width() / 2, height() / 2);
 }
 

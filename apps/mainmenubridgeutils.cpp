@@ -22,8 +22,6 @@ ItemState getLightFromJson(QJsonObject json)
     ItemState state;
     state.id = json["id"].toString();
     state.type = json["type"].toString();
-    double x;
-    double y;
 
     if (json.contains("metadata")) {
         state.name = json["metadata"].toObject()["name"].toString();

@@ -51,7 +51,7 @@ class HueSyncbox : public HueDevice
         void setGroup(QString groupid);
 
     private:
-        QString url_api_v1 = "https://%1/api/v1/%2";;
+        QString url_api_v1 = "https://%1/api/v1/%2";
         int registration_counter;
         QTimer *registration_timer;
         QString access_token = "";
