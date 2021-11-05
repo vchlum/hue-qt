@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/HueIcons/devicesBridgesV2.svg</file>
+        <file>images/HueIcons/tabbarSettings.svg</file>
+        <file>images/syncbox.svg</file>
+    </qresource>
+</RCC>
