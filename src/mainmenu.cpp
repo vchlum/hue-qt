@@ -22,16 +22,20 @@
 #include <QSlider>
 #include <QApplication>
 #include <QInputDialog>
+#include <QTimer>
 
 #include <menuswitch.h>
 
 #include "mainmenu.h"
+#include "mainmenubridge.h"
 #include "menulayout.h"
 #include "menubutton.h"
 
 Menu::Menu(QWidget *parent): QWidget(parent, Qt::FramelessWindowHint | Qt::WindowSystemMenuHint)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+
+    setStyleSheet("background-color: grey;");
 
     bridge_list = new HueBridgeList();
     syncbox_list = new HueSyncboxList();
@@ -75,7 +79,9 @@ Menu::Menu(QWidget *parent): QWidget(parent, Qt::FramelessWindowHint | Qt::Windo
 
 void Menu::adjustWindow()
 {
-    adjustSize();
+    QTimer::singleShot(100, [this]() {
+        adjustSize();
+    });
 }
 
 void Menu::mousePressEvent(QMouseEvent *event)
@@ -181,7 +187,11 @@ void Menu::deviceButtonClicked()
 QHBoxLayout* Menu::createDeviceMenu()
 {
     QHBoxLayout *device_layout = new QHBoxLayout();
-    device_layout->setAlignment(Qt::AlignRight);
+
+    device_label = new QLabel();
+    device_label->setText("Hue Lights 2");
+    device_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+    device_layout->addWidget(device_label);
 
     foreach(HueBridge *bridge, bridge_list->list) {
         if (bridge->known()) {
@@ -201,7 +211,7 @@ QHBoxLayout* Menu::createDeviceMenu()
             connect(bridge_button, SIGNAL(clicked()), this, SLOT(deviceButtonClicked()));
 
             device_layout->addWidget(bridge_button);
-            device_layout->setAlignment(bridge_button, Qt::AlignLeft);
+            device_layout->setAlignment(bridge_button, Qt::AlignRight);
         }
     }
 
@@ -223,7 +233,7 @@ QHBoxLayout* Menu::createDeviceMenu()
             connect(syncbox_button, SIGNAL(clicked()), this, SLOT(deviceButtonClicked()));
 
             device_layout->addWidget(syncbox_button);
-            device_layout->setAlignment(syncbox_button, Qt::AlignLeft);
+            device_layout->setAlignment(syncbox_button, Qt::AlignRight);
         }
     }
 
@@ -266,86 +276,26 @@ void Menu::rebuildAll()
 
     HueBridge *bridge = bridge_list->findBridge(selected_device);
     if (bridge != NULL) {
+        device_label->setText(bridge->deviceName());
+
         if (bridge->known()) {
             bridge->getConfig();
         }
+
+        BridgeLayout *bridge_layout = new BridgeLayout(bridge);
+        connect(bridge_layout, SIGNAL(sizeChanged()), this, SLOT(adjustWindow()));
+
+        menu_layout->addLayout(bridge_layout);
     }
 
     HueSyncbox *syncbox = syncbox_list->findSyncbox(selected_device);
     if (syncbox != NULL) {
+        device_label->setText(syncbox->deviceName());
+
         if (syncbox->known()) {
             syncbox->getDevice();
         }
     }
-
-    auto foo = new MenuExpendable(300, 0);
-    auto bar = new MenuLayout(true, true);
-    bar->setIcon(":images/HueIcons/devicesBridgesV2.svg");
-    bar->setText("foo bar");
-    foo->setHeadLayout(*bar);
-
-    auto *content_layout = new QVBoxLayout();
-
-    auto itemlayout1 = new MenuLayout(false, true);
-    itemlayout1->setText("foo");
-    auto item1 = new MenuButton(itemlayout1);
-    content_layout->addWidget(item1);
-
-    auto itemlayout2 = new MenuLayout(true, false);
-    itemlayout2->setIcon(":images/HueIcons/devicesBridgesV2.svg");
-    itemlayout2->setText("bar");
-    auto item2 = new MenuButton(itemlayout2);
-    content_layout->addWidget(item2);
-
-    auto itemlayout3 = new MenuLayout(false, false);
-    itemlayout3->setText("test");
-    auto item3 = new MenuButton(itemlayout3);
-    content_layout->addWidget(item3);
-
-    auto itemlayout4 = new MenuLayout(true, true);
-    itemlayout4->setText("test2");
-    auto item4 = new MenuButton(itemlayout4);
-    itemlayout4->setColor("#FF0000");
-    content_layout->addWidget(item4);
-
-    foo->setContentLayout(*content_layout);
-
-    connect(foo, SIGNAL(menuToggled()), this, SLOT(adjustWindow()));
-
-    menu_layout->addWidget(foo);
-
-
-
-    auto groups = new MenuExpendable(300, 0);
-    auto main_group = new MenuLayout(true, true);
-    main_group->setIcon(":images/HueIcons/devicesBridgesV2.svg");
-    main_group->setText("Main group");
-    groups->setHeadLayout(*main_group);
-
-    auto *main_group_layout = new QVBoxLayout();
-
-    auto itemlayout5 = new MenuLayout(true, true);
-    itemlayout5->setText("test2");
-    auto item5 = new MenuButton(itemlayout5);
-    itemlayout4->setColor("#FF0000");
-    main_group_layout->addWidget(item5);
-
-    groups->setContentLayout(*main_group_layout);
-
-    connect(groups, SIGNAL(menuToggled()), this, SLOT(adjustWindow()));
-
-    menu_layout->addWidget(groups);
-
-
-
-
-
-
-
-
-
-
-
 
     adjustWindow();
 }

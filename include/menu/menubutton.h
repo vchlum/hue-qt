@@ -33,7 +33,7 @@ class MenuButton : public QPushButton
     signals:
 
     public:
-        explicit MenuButton(MenuLayout *main_layout, QWidget *parent = 0);
+        explicit MenuButton(MenuLayout &main_layout, QWidget *parent = 0);
 };
 
 #endif // MENUBUTTON_H

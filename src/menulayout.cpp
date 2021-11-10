@@ -46,7 +46,7 @@ MenuLayout::MenuLayout(bool use_slider, bool use_switch, QWidget *parent): QHBox
         addWidget(label);
     }
 
-    label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
 
     if (has_switch) {
         mswitch = new MenuSwitch();
@@ -61,6 +61,7 @@ MenuLayout::MenuLayout(bool use_slider, bool use_switch, QWidget *parent): QHBox
 void MenuLayout::setText(QString text)
 {
     label->setText(text);
+    label->setMinimumWidth(label->sizeHint().width());
 }
 void MenuLayout::setIcon(QString icon_name)
 {

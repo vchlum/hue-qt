@@ -31,6 +31,8 @@
 #include <huesyncboxlist.h>
 #include <huesyncbox.h>
 
+#include "mainmenubridge.h"
+
 class Menu : public QWidget
 {
     Q_OBJECT
@@ -42,8 +44,7 @@ class Menu : public QWidget
 
         int counter;
         QMenuBar *menu_bar;
-        MenuExpendable *groups;
-        MenuExpendable *lights;
+        QLabel *device_label;
 
         HueBridgeList *bridge_list;
         HueBridgeDiscovery *discovery;

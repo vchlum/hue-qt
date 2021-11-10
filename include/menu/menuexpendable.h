@@ -29,6 +29,7 @@
 #include <QStyle>
 
 #include "menulayout.h"
+#include "menubutton.h"
 
 // https://stackoverflow.com/questions/32476006/how-to-make-an-expandable-collapsable-section-widget-in-qt
 // https://github.com/MichaelVoelkel/qt-collapsible-section
@@ -38,7 +39,7 @@ class MenuExpendable : public QWidget
     Q_OBJECT
     private:
         QGridLayout* main_layout;
-        QPushButton* toggle_button;
+        QPushButton* toggle_button = NULL;
         QFrame* header_line;
         QParallelAnimationGroup* toggle_animation;
         QScrollArea* content_area;
@@ -46,6 +47,7 @@ class MenuExpendable : public QWidget
         QLabel *arrow_icon;
 
         void setArrowType(QString arrow);
+        void adjustContentSize();
 
     public slots:
         void toggle(bool collapsed);
@@ -55,8 +57,9 @@ class MenuExpendable : public QWidget
 
     public:
         explicit MenuExpendable(const int animation_duration = 100, QWidget* parent = 0);
-        void setHeadLayout(QHBoxLayout &content_layout);
+        void setHeadMenuButton(MenuButton &button);
         void setContentLayout(QLayout &content_layout);
+        void addContentMenuButton(MenuButton &button);
 };
 
 #endif // MENUEXPENDABLE_H

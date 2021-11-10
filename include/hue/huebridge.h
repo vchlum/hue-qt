@@ -90,6 +90,7 @@ class HueBridge : public HueDevice
         void userCreationFailed();
         void userCreationSucceed();
         void infoUpdated();
+        void statusV2(QJsonObject json);
 
     private slots:
         void bridgeRequestFinished(const QVariant type, const QString ret);

@@ -15,14 +15,40 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "menubutton.h"
+#ifndef MENUBRIDGE_H
+#define MENUBRIDGE_H
 
-MenuButton::MenuButton(MenuLayout &main_layout, QWidget *parent): QPushButton(parent)
+#include <QVBoxLayout>
+
+#include <huebridge.h>
+#include <menuexpendable.h>
+
+class BridgeLayout : public QVBoxLayout
 {
-    setLayout(&main_layout);
-    setStyleSheet("QPushButton {border: 8px solid transparent; text-align:left;}");
-    setMinimumWidth(main_layout.sizeHint().width());
-    setMinimumHeight(main_layout.sizeHint().height());
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
-    adjustSize();
-}
+    Q_OBJECT
+
+    public:
+        explicit BridgeLayout(HueBridge *showed_bridge, QWidget* parent = nullptr);
+
+    protected:
+
+    private:
+        bool created = false;
+        HueBridge *bridge;
+        MenuExpendable* groups;
+        MenuExpendable* lights;
+        MenuExpendable* scenes;
+
+        MenuExpendable* createGroups(QJsonObject json);
+        MenuExpendable* createLights(QJsonObject json);
+        MenuExpendable* createScenes(QJsonObject json);
+
+    private slots:
+        void updateBridge(QJsonObject json);
+        void autoResize();
+
+    signals:
+        void sizeChanged();
+};
+
+#endif // MENUBRIDGE_H

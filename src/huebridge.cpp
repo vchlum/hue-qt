@@ -192,6 +192,14 @@ void HueBridge::bridgeRequestFinished(const QVariant type, const QString ret)
                 break;
             }
 
+        case req_bridge_status_v2:
+            {
+                QString device_status = ret;
+                QJsonObject json = QString2QJsonObject(device_status);
+                emit statusV2(json);
+                break;
+            }
+
         case req_bridge_config:
             {
                 QString device_config = ret;

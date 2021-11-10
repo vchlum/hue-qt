@@ -18,7 +18,6 @@
 #include <QPropertyAnimation>
 
 #include "menuexpendable.h"
-#include "menubutton.h"
 
 MenuExpendable::MenuExpendable(const int animation_duration, QWidget *parent) : QWidget(parent), animation_duration(animation_duration)
 {
@@ -26,14 +25,44 @@ MenuExpendable::MenuExpendable(const int animation_duration, QWidget *parent) : 
     toggle_animation = new QParallelAnimationGroup(this);
     content_area = new QScrollArea(this);
     main_layout = new QGridLayout(this);
-
     arrow_icon = new QLabel(this);
 
-    MenuLayout *head_layout = new MenuLayout(false, false);
-    head_layout->addWidget(arrow_icon);
-    head_layout->setAlignment(arrow_icon, Qt::AlignRight);
+    content_area->setWidgetResizable( true );
 
-    toggle_button = new MenuButton(head_layout, this);
+    auto content_layout = new QVBoxLayout();
+    setContentLayout(*content_layout);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+}
+
+void MenuExpendable::toggle(bool collapsed) {
+    MenuExpendable::setArrowType(collapsed ? ":images/arrowdown.svg" : ":images/arrowright.svg");
+    toggle_animation->setDirection(collapsed ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);
+    toggle_animation->start();
+
+    auto content_layout = content_area->widget()->layout();
+    auto contentHeight = content_layout->sizeHint().height();
+}
+
+void MenuExpendable::setArrowType(QString arrow)
+{
+    QIcon icon (arrow);
+
+    arrow_icon->setPixmap(icon.pixmap(QSize(15, 15)));
+}
+
+void MenuExpendable::setHeadMenuButton(MenuButton &button)
+{
+    delete toggle_button;
+
+    toggle_button = &button;
+
+    toggle_button->layout()->addWidget(arrow_icon);
+    toggle_button->layout()->setAlignment(arrow_icon, Qt::AlignRight);
+
+    toggle_button->setMinimumWidth(toggle_button->layout()->sizeHint().width());
+    toggle_button->setMinimumHeight(toggle_button->layout()->sizeHint().height());
+    toggle_button->adjustSize();
+    adjustSize();
 
     toggle(false);
 
@@ -42,7 +71,7 @@ MenuExpendable::MenuExpendable(const int animation_duration, QWidget *parent) : 
 
     //header_line->setFrameShape(QFrame::HLine);
     //header_line->setFrameShadow(QFrame::Sunken);
-    header_line->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+    //header_line->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
     content_area->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     // start out collapsed
@@ -58,51 +87,30 @@ MenuExpendable::MenuExpendable(const int animation_duration, QWidget *parent) : 
     main_layout->setContentsMargins(0, 0, 0, 0);
 
     int row = 0;
-    main_layout->addWidget(toggle_button, row, 0, 1, 1, Qt::AlignLeft);
+    main_layout->addWidget(toggle_button, row, 0, 1, 1);
     main_layout->addWidget(header_line, row++, 2, 1, 1);
     main_layout->addWidget(content_area, row, 0, 1, 3);
     setLayout(main_layout);
 
     connect(toggle_button, &QPushButton::toggled, this, &MenuExpendable::toggle);
     connect(toggle_animation, &QAbstractAnimation::finished, [this]() {
-        emit menuToggled();
         adjustSize();
+        emit menuToggled();
     });
 }
 
-void MenuExpendable::toggle(bool collapsed) {
-    MenuExpendable::setArrowType(collapsed ? ":images/arrowdown.svg" : ":images/arrowright.svg");
-    toggle_animation->setDirection(collapsed ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);
-    toggle_animation->start();
-}
-
-void MenuExpendable::setArrowType(QString arrow)
+void MenuExpendable::adjustContentSize()
 {
-    QIcon icon (arrow);
+    auto content_layout = content_area->widget()->layout();
 
-    arrow_icon->setPixmap(icon.pixmap(QSize(15, 15)));
-}
+    if (content_layout->itemAt(0) == NULL) {
+        return;
+    }
 
-void MenuExpendable::setHeadLayout(QHBoxLayout &head_layout)
-{
-    delete toggle_button->layout();
-
-    head_layout.addWidget(arrow_icon);
-    head_layout.setAlignment(arrow_icon, Qt::AlignRight);
-
-    toggle_button->setLayout(&head_layout);
-    toggle_button->setMinimumWidth(head_layout.sizeHint().width());
-    toggle_button->setMinimumHeight(head_layout.sizeHint().height());
-    toggle_button->adjustSize();
-    adjustSize();
-}
-
-void MenuExpendable::setContentLayout(QLayout &content_layout)
-{
-    delete content_area->layout();
-    content_area->setLayout(&content_layout);
     const auto collapsedHeight = sizeHint().height() - content_area->maximumHeight();
-    auto contentHeight = content_layout.sizeHint().height();
+    auto contentHeight = content_layout->sizeHint().height();
+
+    contentHeight = contentHeight > 500 ? 500 : contentHeight;
 
     for (int i = 0; i < toggle_animation->animationCount() - 1; ++i)
     {
@@ -116,7 +124,25 @@ void MenuExpendable::setContentLayout(QLayout &content_layout)
     content_animation->setDuration(animation_duration);
     content_animation->setStartValue(0);
     content_animation->setEndValue(contentHeight);
+    content_area->setMinimumWidth(content_layout->sizeHint().width());
 
-    content_area->setMinimumWidth(content_layout.sizeHint().width());
     adjustSize();
+}
+
+void MenuExpendable::setContentLayout(QLayout &content_layout)
+{
+    delete content_area->widget();
+    QWidget *widget = new QWidget();
+    widget->setLayout( &content_layout );
+    content_area->setWidget(widget);
+
+    adjustContentSize();
+}
+
+void MenuExpendable::addContentMenuButton(MenuButton &button)
+{
+    auto content_layout = content_area->widget()->layout();
+    content_layout->addWidget(&button);
+
+    adjustContentSize();
 }
