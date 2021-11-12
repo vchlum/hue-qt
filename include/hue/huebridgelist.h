@@ -42,7 +42,7 @@ class HueBridgeList : public HueList
         void bridgeDataUpdated();
 
     public slots:
-        void createBridge(QJsonObject data, QString ip);
+        void createBridge(QJsonObject data, QString ip, bool on_load = false);
 
     private slots:
         void needSave();

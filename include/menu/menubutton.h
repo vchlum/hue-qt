@@ -20,20 +20,34 @@
 
 #include <QPushButton>
 #include <QWidget>
+#include <QIcon>
+#include <QLabel>
 
-#include "menulayout.h"
+#include "menuswitch.h"
+#include "menuslider.h"
 
 class MenuButton : public QPushButton
 {
     Q_OBJECT
     private:
+        QString identifier;
+        bool has_slider;
+        bool has_switch;
+        QLabel *label;
+        QLabel *icon;
+        MenuSlider *slider;
+        MenuSwitch *button_switch;
 
     public slots:
 
     signals:
 
     public:
-        explicit MenuButton(MenuLayout &main_layout, QWidget *parent = 0);
+        explicit MenuButton(QString item_id, bool use_slider, bool use_switch, QWidget *parent = 0);
+        QString id();
+        void setText(QString text);
+        void setIcon(QString icon_name);
+        void setColor(QString color);
 };
 
 #endif // MENUBUTTON_H

@@ -28,7 +28,6 @@
 #include <QLabel>
 #include <QStyle>
 
-#include "menulayout.h"
 #include "menubutton.h"
 
 // https://stackoverflow.com/questions/32476006/how-to-make-an-expandable-collapsable-section-widget-in-qt
@@ -45,6 +44,7 @@ class MenuExpendable : public QWidget
         QScrollArea* content_area;
         int animation_duration;
         QLabel *arrow_icon;
+        bool is_collapsed = true;
 
         void setArrowType(QString arrow);
         void adjustContentSize();
@@ -60,6 +60,7 @@ class MenuExpendable : public QWidget
         void setHeadMenuButton(MenuButton &button);
         void setContentLayout(QLayout &content_layout);
         void addContentMenuButton(MenuButton &button);
+        void clearContentButtons();
 };
 
 #endif // MENUEXPENDABLE_H

@@ -28,21 +28,15 @@ target_link_libraries(hue PRIVATE Qt6::Network)
 set(MENU_INCLUDE ${CMAKE_SOURCE_DIR}/include/menu)
 set(HEADER_MENU_LIST
     ${MENU_INCLUDE}/menubutton.h
+    ${MENU_INCLUDE}/menucolorpicker.h
     ${MENU_INCLUDE}/menuexpendable.h
-    ${MENU_INCLUDE}/menugroups.h
-    ${MENU_INCLUDE}/menulayout.h
-    ${MENU_INCLUDE}/menulights.h
-    ${MENU_INCLUDE}/menuscenes.h
     ${MENU_INCLUDE}/menuslider.h
     ${MENU_INCLUDE}/menuswitch.h)
 qt_add_library(menu
     ${CMAKE_SOURCE_DIR}/resources/menu_resources.qrc
     menubutton.cpp
+    menucolorpicker.cpp
     menuexpendable.cpp
-    menugroups.cpp
-    menulayout.cpp
-    menulights.cpp
-    menuscenes.cpp
     menuslider.cpp
     menuswitch.cpp
     ${HEADER_MENU_LIST}

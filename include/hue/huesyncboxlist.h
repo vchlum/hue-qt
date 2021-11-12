@@ -41,7 +41,7 @@ class HueSyncboxList : public HueList
         void syncboxDataUpdated();
 
     public slots:
-        void createSyncbox(QJsonObject data, QString ip);
+        void createSyncbox(QJsonObject data, QString ip, bool on_load = false);
 
     private slots:
         void needSave();

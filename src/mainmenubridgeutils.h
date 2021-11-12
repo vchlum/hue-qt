@@ -15,8 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "menugroups.h"
+#ifndef MAINMENUBRIDGEUTILS_H
+#define MAINMENUBRIDGEUTILS_H
 
-MenuGroups::MenuGroups(const int animation_duration, QWidget *parent): MenuExpendable(animation_duration, parent)
-{
-}
+#include <QJsonObject>
+#include <QJsonArray>
+
+QJsonObject getItemById(QJsonObject json, QString id);
+QString getTypeById(QJsonObject json, QString id);
+QJsonArray getItemsByType(QJsonObject json, QString type);
+QJsonArray getServicesById(QJsonObject json, QString id);
+
+
+#endif // MAINMENUBRIDGEUTILS_H

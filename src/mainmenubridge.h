@@ -15,40 +15,48 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef MENUBRIDGE_H
-#define MENUBRIDGE_H
+#ifndef MAINMENUBRIDGE_H
+#define MAINMENUBRIDGE_H
 
-#include <QVBoxLayout>
+#include <QWidget>
 
 #include <huebridge.h>
 #include <menuexpendable.h>
 
-class BridgeLayout : public QVBoxLayout
+class BridgeWidget : public QWidget
 {
     Q_OBJECT
 
     public:
-        explicit BridgeLayout(HueBridge *showed_bridge, QWidget* parent = nullptr);
+        explicit BridgeWidget(HueBridge *showed_bridge, QWidget* parent = nullptr);
 
     protected:
 
     private:
-        bool created = false;
+        QString selected_group = "";
+        QString selected_light = "";
         HueBridge *bridge;
         MenuExpendable* groups;
         MenuExpendable* lights;
         MenuExpendable* scenes;
+        MenuExpendable* colors;
+        QJsonObject bridge_data;
+        bool rebuild = true;
 
-        MenuExpendable* createGroups(QJsonObject json);
-        MenuExpendable* createLights(QJsonObject json);
-        MenuExpendable* createScenes(QJsonObject json);
+        void setGroups(QString head_group_id);
+        void setLights(QString group_id, QString head_light_id);
+        void setScenes(QString group_id);
+        void setColorsTemperature(QString group_id, QString light_id);
 
     private slots:
         void updateBridge(QJsonObject json);
         void autoResize();
+        void groupClicked();
+        void lightClicked();
+        void sceneClicked();
 
     signals:
         void sizeChanged();
 };
 
-#endif // MENUBRIDGE_H
+#endif // MAINMENUBRIDGE_H

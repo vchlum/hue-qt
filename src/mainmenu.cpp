@@ -28,7 +28,6 @@
 
 #include "mainmenu.h"
 #include "mainmenubridge.h"
-#include "menulayout.h"
 #include "menubutton.h"
 
 Menu::Menu(QWidget *parent): QWidget(parent, Qt::FramelessWindowHint | Qt::WindowSystemMenuHint)
@@ -184,9 +183,10 @@ void Menu::deviceButtonClicked()
     rebuildAll();
 }
 
-QHBoxLayout* Menu::createDeviceMenu()
+QWidget* Menu::createDeviceMenu()
 {
-    QHBoxLayout *device_layout = new QHBoxLayout();
+    QWidget *device_widget = new QWidget(this);
+    QHBoxLayout *device_layout = new QHBoxLayout(device_widget);
 
     device_label = new QLabel();
     device_label->setText("Hue Lights 2");
@@ -249,7 +249,7 @@ QHBoxLayout* Menu::createDeviceMenu()
     device_layout->addWidget(button_settings);
     device_layout->setAlignment(button_settings, Qt::AlignRight);
 
-    return device_layout;
+    return device_widget;
 }
 
 void Menu::rebuildAll()
@@ -270,9 +270,11 @@ void Menu::rebuildAll()
 
     QVBoxLayout *menu_layout = new QVBoxLayout(this);
 
+    menu_layout->setContentsMargins(0, 0, 0, 0);
+
     menu_layout->setAlignment(Qt::AlignTop);
 
-    menu_layout->addLayout(createDeviceMenu());
+    menu_layout->addWidget(createDeviceMenu());
 
     HueBridge *bridge = bridge_list->findBridge(selected_device);
     if (bridge != NULL) {
@@ -282,10 +284,10 @@ void Menu::rebuildAll()
             bridge->getConfig();
         }
 
-        BridgeLayout *bridge_layout = new BridgeLayout(bridge);
-        connect(bridge_layout, SIGNAL(sizeChanged()), this, SLOT(adjustWindow()));
+        BridgeWidget *bridge_widget = new BridgeWidget(bridge, this);
+        connect(bridge_widget, SIGNAL(sizeChanged()), this, SLOT(adjustWindow()));
 
-        menu_layout->addLayout(bridge_layout);
+        menu_layout->addWidget(bridge_widget);
     }
 
     HueSyncbox *syncbox = syncbox_list->findSyncbox(selected_device);

@@ -53,7 +53,7 @@ class Menu : public QWidget
         QPushButton *button_settings;
         QString selected_device = "";
 
-        QHBoxLayout* createDeviceMenu();
+        QWidget* createDeviceMenu();
 
     protected:
         void mouseMoveEvent(QMouseEvent *event) override;

@@ -68,7 +68,7 @@ void HueSyncboxList::needSave()
     emit syncboxDataUpdated();
 }
 
-void HueSyncboxList::createSyncbox(QJsonObject data, QString ip)
+void HueSyncboxList::createSyncbox(QJsonObject data, QString ip, bool on_load)
 {
     HueSyncbox *syncbox = NULL;
 
@@ -87,8 +87,13 @@ void HueSyncboxList::createSyncbox(QJsonObject data, QString ip)
     QJsonObject data_ip;
     data_ip["ipAddress"] = ip;
 
-    syncbox->updateSyncboxInfo(data_ip);
-    syncbox->updateSyncboxInfo(data);
+    if (syncbox->updateSyncboxInfo(data_ip) && !on_load) {
+         needSave();
+    }
+
+    if (syncbox->updateSyncboxInfo(data) && !on_load) {
+         needSave();
+    }
 }
 
 void HueSyncboxList::saveSyncboxes()
@@ -136,7 +141,7 @@ void HueSyncboxList::loadSyncboxes()
 
             QString ip = syncbox["ipAddress"].toString();
 
-            createSyncbox(syncbox, ip);
+            createSyncbox(syncbox, ip, true);
         }
     }
 }

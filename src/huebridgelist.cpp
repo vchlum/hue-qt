@@ -75,7 +75,7 @@ void HueBridgeList::checkBridges()
     }
 }
 
-void HueBridgeList::createBridge(QJsonObject data, QString ip)
+void HueBridgeList::createBridge(QJsonObject data, QString ip, bool on_load)
 {
     HueBridge *bridge = NULL;
 
@@ -94,8 +94,13 @@ void HueBridgeList::createBridge(QJsonObject data, QString ip)
     QJsonObject data_ip;
     data_ip["internalipaddress"] = ip;
 
-    bridge->updateBridgeInfo(data_ip);
-    bridge->updateBridgeInfo(data);
+    if (bridge->updateBridgeInfo(data_ip) && !on_load) {
+        needSave();
+    }
+
+    if (bridge->updateBridgeInfo(data) && !on_load) {
+        needSave();
+    }
 }
 
 void HueBridgeList::saveBridges()
@@ -143,7 +148,7 @@ void HueBridgeList::loadBridges()
 
             QString ip = bridge["internalipaddress"].toString();
 
-            createBridge(bridge, ip);
+            createBridge(bridge, ip, true);
         }
     }
 }
