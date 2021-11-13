@@ -3,24 +3,77 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
+#include <QColor>
 
 class ColorWheel : public QWidget
 {
     Q_OBJECT
-public:
-    explicit ColorWheel(QWidget *parent = 0);
-    
-signals:
+    public:
+        explicit ColorWheel(QWidget *parent = 0);
+        QSize sizeHint() const override;
 
-    
-public slots:
+    signals:
+
+    public slots:
+
+    protected:
+        void paintEvent(QPaintEvent *e);
+        void resizeEvent(QResizeEvent *e);
+
+    private:
+        QColor* color;
+        int margin;
+        int h;
+        int s;
+        int v;
+        int radius;
+
+    private slots:
+};
+
+class TemperatureBox : public QWidget
+{
+    Q_OBJECT
+    public:
+        explicit TemperatureBox(QWidget *parent = 0);
+        QSize sizeHint() const override;
+
+    signals:
+
+    public slots:
 
 
-protected:
+    protected:
+        void paintEvent(QPaintEvent *e);
+        void resizeEvent(QResizeEvent *e);
 
-private:
+    private:
+        QColor* color;
+        int margin;
+        int h;
+        int s;
+        int v;
+        int radius;
 
-private slots:
+    private slots:
+};
+
+class ColorPicker : public QWidget
+{
+    Q_OBJECT
+    public:
+        explicit ColorPicker(QWidget *parent = 0);
+
+    signals:
+
+    public slots:
+
+    protected:
+
+    private:
+        QVBoxLayout* main_layout;
+
+    private slots:
 
 };
 

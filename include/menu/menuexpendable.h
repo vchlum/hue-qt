@@ -59,6 +59,7 @@ class MenuExpendable : public QWidget
         explicit MenuExpendable(const int animation_duration = 100, QWidget* parent = 0);
         void setHeadMenuButton(MenuButton &button);
         void setContentLayout(QLayout &content_layout);
+        void setContentWidget(QWidget &content_widget);
         void addContentMenuButton(MenuButton &button);
         void clearContentButtons();
 };

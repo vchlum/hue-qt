@@ -20,11 +20,41 @@
 
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QColor>
+
+struct ItemState {
+    bool has_on = false;
+    bool on = false;
+    bool on_any = false;
+    bool on_all = false;
+
+    bool has_dimming = false;
+    int brightness = 0;
+
+    bool has_color = false;
+    QColor color;
+
+    bool has_color_temperature = false;
+    int color_temperature = 0;
+    int color_temperature_minimum = 0;
+    int color_temperature_maximum = 0;
+
+    QVarLengthArray<QString> ids;
+} ;
 
 QJsonObject getItemById(QJsonObject json, QString id);
 QString getTypeById(QJsonObject json, QString id);
 QJsonArray getItemsByType(QJsonObject json, QString type);
 QJsonArray getServicesById(QJsonObject json, QString id);
 
+ItemState getLightState(QJsonObject json, QString id);
+ItemState getStateById(QJsonObject json, QString id);
+
+/*
+ Convert xy and brightness to RGB
+ https://stackoverflow.com/questions/22894498/philips-hue-convert-xy-from-api-to-hex-or-rgb
+ https://stackoverflow.com/questions/16052933/convert-philips-hue-xy-values-to-hex
+*/
+QColor XYBriToColor(double x, double y, int bri);
 
 #endif // MAINMENUBRIDGEUTILS_H

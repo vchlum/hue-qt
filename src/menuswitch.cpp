@@ -31,7 +31,7 @@ _anim(new QPropertyAnimation(this, "offset", this))
 {
     setOffset(_height / 2);
     _y = _height / 2;
-    setBrush(QColor("#009688"));
+    setBrush(QColor("#2E2E2E"));
 }
 
 MenuSwitch::MenuSwitch(const QBrush &brush, QWidget *parent) : QAbstractButton(parent),
@@ -69,21 +69,26 @@ void MenuSwitch::paintEvent(QPaintEvent *e) {
     }
 }
 
+void MenuSwitch::doAnimatedSwitch()
+{
+    if (_switch) {
+        _anim->setStartValue(_height / 2);
+        _anim->setEndValue(width() - _height);
+        _anim->setDuration(120);
+        _anim->start();
+    } else {
+        _anim->setStartValue(offset());
+        _anim->setEndValue(_height / 2);
+        _anim->setDuration(120);
+        _anim->start();
+    }
+}
+
 void MenuSwitch::mouseReleaseEvent(QMouseEvent *e) {
     if (e->button() & Qt::LeftButton) {
         _switch = _switch ? false : true;
         _thumb = _switch ? _brush : QBrush("#d5d5d5");
-        if (_switch) {
-            _anim->setStartValue(_height / 2);
-            _anim->setEndValue(width() - _height);
-            _anim->setDuration(120);
-            _anim->start();
-        } else {
-            _anim->setStartValue(offset());
-            _anim->setEndValue(_height / 2);
-            _anim->setDuration(120);
-            _anim->start();
-        }
+        doAnimatedSwitch();
     }
     QAbstractButton::mouseReleaseEvent(e);
 }
@@ -97,8 +102,16 @@ QSize MenuSwitch::sizeHint() const {
     return QSize(2 * (_height + _margin), _height + 2 * _margin);
 }
 
-void MenuSwitch::setColor(QString color)
+void MenuSwitch::setColor(QColor color)
 {
-    setBrush(QColor(color));
+    setBrush(color);
     repaint();
+}
+
+void MenuSwitch::setValue(bool on){
+    if (on != _switch) {
+        _switch = on;
+        doAnimatedSwitch();
+    }
+
 }

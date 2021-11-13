@@ -33,6 +33,7 @@ class MenuButton : public QPushButton
         QString identifier;
         bool has_slider;
         bool has_switch;
+        bool all_items = false;
         QLabel *label;
         QLabel *icon;
         MenuSlider *slider;
@@ -41,13 +42,18 @@ class MenuButton : public QPushButton
     public slots:
 
     signals:
-
+        void buttonRemoved(QString s);
     public:
         explicit MenuButton(QString item_id, bool use_slider, bool use_switch, QWidget *parent = 0);
+        ~MenuButton() { emit buttonRemoved(id()); }
         QString id();
         void setText(QString text);
         void setIcon(QString icon_name);
-        void setColor(QString color);
+        void setColor(QColor color);
+        void setSwitch(bool on);
+        void setSlider(int value);
+        void setAllItems(bool all);
+        bool allItems();
 };
 
 #endif // MENUBUTTON_H

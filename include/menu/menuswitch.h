@@ -32,7 +32,7 @@ class MenuSwitch : public QAbstractButton
     public:
         MenuSwitch(QWidget* parent = nullptr);
         MenuSwitch(const QBrush& brush, QWidget* parent = nullptr);
-        void setColor(QString color);
+        void setColor(QColor color);
 
         QSize sizeHint() const override;
 
@@ -51,6 +51,8 @@ class MenuSwitch : public QAbstractButton
             update();
         }
 
+        void setValue(bool on);
+
     protected:
         void paintEvent(QPaintEvent*) override;
         void mouseReleaseEvent(QMouseEvent*) override;
@@ -62,6 +64,7 @@ class MenuSwitch : public QAbstractButton
         int _x, _y, _height, _margin;
         QBrush _thumb, _track, _brush;
         QPropertyAnimation *_anim = nullptr;
+        void doAnimatedSwitch();
 };
 
 #endif // MENUSWITCH_H

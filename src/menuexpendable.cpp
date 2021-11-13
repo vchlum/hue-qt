@@ -148,6 +148,14 @@ void MenuExpendable::setContentLayout(QLayout &content_layout)
     adjustContentSize();
 }
 
+void MenuExpendable::setContentWidget(QWidget &content_widget)
+{
+    delete content_area->widget();
+    content_area->setWidget(&content_widget);
+
+    adjustContentSize();
+}
+
 void MenuExpendable::addContentMenuButton(MenuButton &button)
 {
     auto content_layout = content_area->widget()->layout();

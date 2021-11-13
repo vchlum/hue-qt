@@ -26,7 +26,7 @@ class MenuSlider : public QSlider
 
     public:
         MenuSlider(QWidget* parent = nullptr);
-        void setColor(QString color);
+        void setColor(QColor color);
 
     protected:
 

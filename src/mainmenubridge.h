@@ -23,6 +23,8 @@
 #include <huebridge.h>
 #include <menuexpendable.h>
 
+#include "mainmenubridgeutils.h"
+
 class BridgeWidget : public QWidget
 {
     Q_OBJECT
@@ -42,11 +44,14 @@ class BridgeWidget : public QWidget
         MenuExpendable* colors;
         QJsonObject bridge_data;
         bool rebuild = true;
+        QMap<MenuButton*, QVarLengthArray<QString>> refresh_button_list;
 
         void setGroups(QString head_group_id);
         void setLights(QString group_id, QString head_light_id);
         void setScenes(QString group_id);
         void setColorsTemperature(QString group_id, QString light_id);
+        void setItemState(MenuButton* item, ItemState state, bool all_items_on);
+        void updateAllButtons();
 
     private slots:
         void updateBridge(QJsonObject json);
@@ -54,6 +59,7 @@ class BridgeWidget : public QWidget
         void groupClicked();
         void lightClicked();
         void sceneClicked();
+        void updateButtonList(QString main_id);
 
     signals:
         void sizeChanged();

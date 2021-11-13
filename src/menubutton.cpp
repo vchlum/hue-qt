@@ -89,7 +89,7 @@ void MenuButton::setIcon(QString icon_name)
     icon->setPixmap(tmp_icon.pixmap(QSize(24, 24)));
 }
 
-void MenuButton::setColor(QString color)
+void MenuButton::setColor(QColor color)
 {
     if (has_slider) {
         slider->setColor(color);
@@ -98,4 +98,26 @@ void MenuButton::setColor(QString color)
     if (has_switch) {
         button_switch->setColor(color);
     }
+}
+
+void MenuButton::setSwitch(bool on)
+{
+    if (!has_switch) {return;}
+    button_switch->setValue(on);
+}
+
+void MenuButton::setSlider(int value)
+{
+    if (!has_slider) {return;}
+    slider->setValue(value);
+}
+
+void MenuButton::setAllItems(bool all)
+{
+    all_items = all;
+}
+
+bool MenuButton::allItems()
+{
+    return all_items;
 }

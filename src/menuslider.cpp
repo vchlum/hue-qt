@@ -20,7 +20,7 @@
 MenuSlider::MenuSlider(QWidget *parent) : QSlider(parent)
 {
     setOrientation(Qt::Horizontal);
-    setRange(0, 255);
+    setRange(0, 100);
     setValue(0);
     setMinimumWidth(200);
     setMaximumWidth(200);
@@ -28,7 +28,7 @@ MenuSlider::MenuSlider(QWidget *parent) : QSlider(parent)
     setColor("#b4b4b4");
 }
 
-void MenuSlider::setColor(QString color)
+void MenuSlider::setColor(QColor color)
 {
     //setStyleSheet("QSlider::handle:horizontal {background-color: red;} QSlider::groove:horizontal {background-color:green;}");
     //setStyleSheet("QSlider::handle:horizontal {background-color: red;} QSlider::handle:vertical {background-color:green;}");
@@ -45,7 +45,7 @@ void MenuSlider::setColor(QString color)
         }\
         \
         QSlider::handle:horizontal {\
-            background: " + color + ";\
+            background: " + color.name() + ";\
             border: 0px solid #5c5c5c;\
             width: 18px;\
             margin: -2px 0;\
@@ -55,7 +55,7 @@ void MenuSlider::setColor(QString color)
         QSlider::sub-page:horizontal {\
             border: 0px solid #999999;\
             height: 8px;\
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 " + color + ", stop:1 #c4c4c4);\
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 " + color.name() + ", stop:1 #c4c4c4);\
             margin: 2px 0;\
         }\
         QSlider::add-page:horizontal {\
