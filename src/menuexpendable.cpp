@@ -56,11 +56,15 @@ MenuExpendable::MenuExpendable(const int animation_duration, QWidget *parent) : 
     setLayout(main_layout);
 }
 
-void MenuExpendable::toggle(bool collapsed) {
-    toggle_button->setChecked(collapsed);
-    is_collapsed = !collapsed;
-    setArrowType(!collapsed ? ":images/arrowright.svg" : ":images/arrowdown.svg");
-    toggle_animation->setDirection(collapsed ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);
+void MenuExpendable::toggle(bool expanded) {
+    if (is_collapsed != expanded) {
+        return;
+    }
+
+    toggle_button->setChecked(expanded);
+    is_collapsed = !expanded;
+    setArrowType(!expanded ? ":images/arrowright.svg" : ":images/arrowdown.svg");
+    toggle_animation->setDirection(expanded ? QAbstractAnimation::Forward : QAbstractAnimation::Backward);
     toggle_animation->start();
 }
 

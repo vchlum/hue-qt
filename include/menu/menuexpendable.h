@@ -50,7 +50,7 @@ class MenuExpendable : public QWidget
         void adjustContentSize();
 
     public slots:
-        void toggle(bool collapsed);
+        void toggle(bool expanded);
 
     signals:
         void menuToggled();

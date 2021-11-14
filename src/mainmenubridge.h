@@ -46,15 +46,17 @@ class BridgeWidget : public QWidget
         bool rebuild = true;
         QMap<MenuButton*, QVarLengthArray<QString>> refresh_button_list;
 
+        MenuButton* createMenuButton(QString id, MenuExpendable* menu, void (BridgeWidget::*button_slot)() = NULL, QString custom_text = "");
         void setGroups(QString head_group_id);
         void setLights(QString group_id, QString head_light_id);
         void setScenes(QString group_id);
-        void setColorsTemperature(QString group_id, QString light_id);
+        void setColorsTemperature(QString light_id, QString group_id);
         void setItemState(MenuButton* item, ItemState state, bool all_items_on);
         void updateAllButtons();
 
     private slots:
         void updateBridge(QJsonObject json);
+        void processEvent(QJsonObject json);
         void autoResize();
         void groupClicked();
         void lightClicked();
