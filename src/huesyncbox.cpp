@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -121,7 +121,7 @@ void HueSyncbox::tryRegister()
     QString host_name = QHostInfo::localHostName().left(10);
 
     QJsonObject json;
-    json["appName"] = "hue-lights-2";
+    json["appName"] = "hue-qt";
     json["instanceName"] = host_name;
 
     QString url = url_api_v1.arg(ip(), "registrations");

@@ -63,6 +63,7 @@ class ColorPicker : public QWidget
     Q_OBJECT
     public:
         explicit ColorPicker(QWidget *parent = 0);
+        QSize sizeHint() const override;
 
     signals:
 

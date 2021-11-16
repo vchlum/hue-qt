@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -35,6 +35,7 @@ class BridgeWidget : public QWidget
     protected:
 
     private:
+        QString bridge_home_id = "";
         QString selected_group = "";
         QString selected_light = "";
         HueBridge *bridge;
@@ -42,26 +43,42 @@ class BridgeWidget : public QWidget
         MenuExpendable* lights;
         MenuExpendable* scenes;
         MenuExpendable* colors;
-        QJsonObject bridge_data;
         bool rebuild = true;
-        QMap<MenuButton*, QVarLengthArray<QString>> refresh_button_list;
 
-        MenuButton* createMenuButton(QString id, MenuExpendable* menu, void (BridgeWidget::*button_slot)() = NULL, QString custom_text = "");
-        void setGroups(QString head_group_id);
-        void setLights(QString group_id, QString head_light_id);
+        QMap<QString, ItemState> states_groups;
+        QMap<QString, ItemState> states_lights;
+        QMap<QString, ItemState> states_scenes;
+
+        QMap<MenuButton*, QString> refresh_button_list;
+
+        void addGroupState(QJsonObject json);
+        void addLightState(QJsonObject json);
+        void addSceneState(QJsonObject json);
+        void createStates(QJsonObject json);
+        QMap<QString, ItemState>* getStatesByType(QString type);
+
+        void updateButtonState(MenuButton* button, ItemState state);
+        MenuButton* createMenuButton(MenuExpendable* menu, ItemState state, void (BridgeWidget::*button_slot)() = NULL, bool back_button = false, QString custom_text = "");
+
+        ItemState getCombinedGroupState(ItemState base_state);
+
+        void setGroups();
+        void setLights(QString group_id);
         void setScenes(QString group_id);
         void setColorsTemperature(QString light_id, QString group_id);
-        void setItemState(MenuButton* item, ItemState state, bool all_items_on);
+
         void updateAllButtons();
+        QString updateStateByEvent(QJsonObject json);
+        void updateRelatedButtons(QVarLengthArray<QString> updated_list);
 
     private slots:
         void updateBridge(QJsonObject json);
-        void processEvent(QJsonObject json);
+        void processEvents(QJsonArray &json_array);
         void autoResize();
         void groupClicked();
         void lightClicked();
         void sceneClicked();
-        void updateButtonList(QString main_id);
+        void removeFromButtonList(QString main_id);
 
     signals:
         void sizeChanged();

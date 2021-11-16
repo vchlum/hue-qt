@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 
 #include "menubutton.h"
 
-MenuButton::MenuButton(QString item_id, bool use_slider, bool use_switch, QWidget *parent): QPushButton(parent)
+MenuButton::MenuButton(QString item_id, bool use_slider, int points, bool use_back, bool use_switch, QWidget *parent): QPushButton(parent)
 {
     QHBoxLayout *button_layout = new QHBoxLayout(this);
 
@@ -32,14 +32,13 @@ MenuButton::MenuButton(QString item_id, bool use_slider, bool use_switch, QWidge
     identifier = item_id;
     has_slider = use_slider;
     has_switch = use_switch;
+    combined_state = false;
 
     button_layout->setAlignment(Qt::AlignLeft);
     button_layout->setContentsMargins(0, 0, 0, 0);
 
     button_layout->addWidget(icon);
     button_layout->setAlignment(icon, Qt::AlignLeft);
-
-
 
     if (has_slider) {
         auto *slider_box = new QVBoxLayout();
@@ -49,12 +48,24 @@ MenuButton::MenuButton(QString item_id, bool use_slider, bool use_switch, QWidge
         slider_box->addWidget(label);
         slider_box->addWidget(slider);
 
+        for (int i =0; i < points; ++i) {
+            slider_box->addWidget(new MenuSlider(this));
+        }
+
         button_layout->addLayout(slider_box);
     } else {
         button_layout->addWidget(label);
     }
 
     label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
+
+    if (use_back) {
+        ClickableLabel* back_icon = new ClickableLabel(this);
+        QIcon tmp_icon (":images/HueIcons/settingsSoftwareUpdate.svg");
+        back_icon->setPixmap(tmp_icon.pixmap(QSize(20, 20)));
+        button_layout->addWidget(back_icon);
+        connect(back_icon, &ClickableLabel::clicked, [this]() { emit goBack();});
+    }
 
     if (has_switch) {
         button_switch = new MenuSwitch(this);
@@ -112,12 +123,21 @@ void MenuButton::setSlider(int value)
     slider->setValue(value);
 }
 
-void MenuButton::setAllItems(bool all)
+void MenuButton::setCombined(bool c)
 {
-    all_items = all;
+    combined_state = c;
 }
 
-bool MenuButton::allItems()
+bool MenuButton::combined()
 {
-    return all_items;
+    return combined_state;
+}
+
+ClickableLabel::ClickableLabel(QWidget* parent, Qt::WindowFlags f) : QLabel(parent)
+{}
+
+ClickableLabel::~ClickableLabel() {}
+
+void ClickableLabel::mousePressEvent(QMouseEvent* event) {
+    emit clicked();
 }

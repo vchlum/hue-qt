@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>images/arrowdown.svg</file>
         <file>images/arrowright.svg</file>
+
+        <file>images/HueIcons/settingsSoftwareUpdate.svg</file>
     </qresource>
 </RCC>

@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,205 +17,182 @@
 
 #include "mainmenubridgeutils.h"
 
-QJsonObject getItemById(QJsonObject json, QString id)
-{
-    QJsonObject ret;
-
-    if (! json.contains("data")) {
-        return ret;
-    }
-
-    QJsonArray json_array = json["data"].toArray();
-
-    for (int i = 0; i < json_array.size(); ++i) {
-        QJsonObject j = json_array[i].toObject();
-
-        if (j.contains("id") && j["id"].toString() == id) {
-            return j;
-        }
-    }
-
-    return ret;
-}
-
-QString getTypeById(QJsonObject json, QString id)
-{
-    QString ret = "";
-
-    QJsonObject item = getItemById(json, id);
-
-    if (item.contains("type")) {
-        return item["type"].toString();
-    }
-
-    return ret;
-}
-
-QJsonArray getItemsByType(QJsonObject json, QString type)
-{
-    QJsonArray ret;
-
-    if (! json.contains("data")) {
-        return ret;
-    }
-
-    QJsonArray json_array = json["data"].toArray();
-
-    for (int i = 0; i < json_array.size(); ++i) {
-        QJsonObject j = json_array[i].toObject();
-
-        if (j.contains("type") && j["type"].toString() == type) {
-            ret.append(j);
-        }
-    }
-
-    return ret;
-}
-
-QJsonArray getServicesById(QJsonObject json, QString id)
-{
-    QJsonArray ret;
-
-    QJsonObject item = getItemById(json, id);
-
-    if (! item.contains("services")) {
-        return ret;
-    }
-
-    return item["services"].toArray();
-}
-
-ItemState getLightState(QJsonObject json, QString id)
+ItemState getLightFromJson(QJsonObject json)
 {
     ItemState state;
-    QJsonObject item = getItemById(json, id);
+    state.id = json["id"].toString();
+    state.type = json["type"].toString();
 
-    if (item.contains("on")) {
+    if (json.contains("metadata")) {
+        state.name = json["metadata"].toObject()["name"].toString();
+        state.archetype = json["metadata"].toObject()["archetype"].toString();
+    }
+
+    if (json.contains("on")) {
         state.has_on = true;
-        state.on_all = item["on"].toObject()["on"].toBool();
-
-        // we have only one light now
-        state.on_any = state.on_all;
+        state.on = json["on"].toObject()["on"].toBool();
     }
 
-    if (item.contains("dimming")) {
+    if (json.contains("dimming")) {
         state.has_dimming = true;
-        state.brightness = item["dimming"].toObject()["brightness"].toDouble();
+        state.brightness = json["dimming"].toObject()["brightness"].toDouble();
     }
 
-    if (item.contains("color")) {
+    if (json.contains("color")) {
         state.has_color = true;
-        double x = item["color"].toObject()["xy"].toObject()["x"].toDouble();
-        double y = item["color"].toObject()["xy"].toObject()["y"].toDouble();
+        double x = json["color"].toObject()["xy"].toObject()["x"].toDouble();
+        double y = json["color"].toObject()["xy"].toObject()["y"].toDouble();
         state.color = XYBriToColor(x, y, 255);
     }
 
-    if (item.contains("color_temperature")) {
+    if (json.contains("color_temperature")) {
         state.has_color_temperature = true;
-        state.color_temperature = item["color_temperature"].toObject()["mirek"].toDouble();
-        state.color_temperature_minimum = item["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_minimum"].toDouble();
-        state.color_temperature_maximum = item["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_maximum"].toDouble();
+        state.color_temperature = json["color_temperature"].toObject()["mirek"].toDouble();
+        state.color_temperature_minimum = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_minimum"].toDouble();
+        state.color_temperature_maximum = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_maximum"].toDouble();
+    }
+
+    if (json.contains("gradient")) {
+        state.has_gradient = true;
+        state.gradient_points_capable = json["gradient"].toObject()["points_capable"].toDouble();
     }
 
     return state;
 }
 
-ItemState combineTwoStates(ItemState a, ItemState b)
+ItemState getGroupFromJson(QJsonObject json)
+{
+    ItemState state;
+    state.id = json["id"].toString();
+    state.type = json["type"].toString();
+
+    if (json.contains("metadata")) {
+        state.name = json["metadata"].toObject()["name"].toString();
+        state.archetype = json["metadata"].toObject()["archetype"].toString();
+    }
+
+    if (json.contains("services")) {
+        QJsonArray services = json["services"].toArray();
+        for (int i = 0; i < services.size(); ++i) {
+            QJsonObject json_service = services[i].toObject();
+
+            state.services[json_service["rid"].toString()] = json_service["rtype"].toString();
+        }
+    }
+
+    return state;
+}
+
+ItemState getSceneFromJson(QJsonObject json)
+{
+    ItemState state;
+    state.id = json["id"].toString();
+    state.type = json["type"].toString();
+
+    if (json.contains("metadata")) {
+        state.name = json["metadata"].toObject()["name"].toString();
+    }
+
+    if (json.contains("group")) {
+        state.group_id = json["group"].toObject()["rid"].toString();
+        state.group_type = json["group"].toObject()["rtype"].toString();
+    }
+
+    return state;
+}
+
+ItemState updateState(ItemState state, QJsonObject json)
+{
+    if (json.contains("on")) {
+        state.has_on = true;
+        state.on = json["on"].toObject()["on"].toBool();
+    }
+
+    if (json.contains("dimming")) {
+        state.has_dimming = true;
+        state.brightness = json["dimming"].toObject()["brightness"].toDouble();
+    }
+
+    if (json.contains("color")) {
+        state.has_color = true;
+        double x = json["color"].toObject()["xy"].toObject()["x"].toDouble();
+        double y = json["color"].toObject()["xy"].toObject()["y"].toDouble();
+        state.color = XYBriToColor(x, y, 255);
+    }
+
+    if (json.contains("color_temperature")) {
+        state.has_color_temperature = true;
+        state.color_temperature = json["color_temperature"].toObject()["mirek"].toDouble();
+        state.color_temperature_minimum = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_minimum"].toDouble();
+        state.color_temperature_maximum = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_maximum"].toDouble();
+    }
+
+    if (json.contains("gradient")) {
+        state.has_gradient = true;
+        state.gradient_points_capable = json["gradient"].toObject()["points_capable"].toDouble();
+    }
+
+    return state;
+}
+
+ItemState combineTwoStates(ItemState base, ItemState joiner)
 {
     ItemState state;
 
-    state.has_on = a.has_on || b.has_on;
+    state.id = base.id;
+    state.type = base.type;
+    state.name = base.name;
+    state.archetype = base.archetype;
 
-    if (a.has_on && b.has_on) {
-        state.on_all = a.on_all && b.on_all;
-        state.on_any = a.on_any || b.on_any;
-    } else if (a.has_on){
-        state.on_all = a.on_all;
-        state.on_any = a.on_any;
-    } else if (b.has_on){
-        state.on_all = b.on_all;
-        state.on_any = b.on_any;
-    }
+    state.has_on = base.has_on || joiner.has_on;
+    state.on = base.on || joiner.on;
 
     if (! state.has_on) {
         return state;
     }
 
-    state.has_dimming = a.has_dimming || b.has_dimming;
-    if ((a.on_any && b.on_any) && a.has_dimming && b.has_dimming) {
-        state.brightness = (a.brightness + b.brightness) / 2.0;
-    } else if (a.on_any && a.has_dimming) {
-        state.brightness = a.brightness;
-    } else if (b.on_any && b.has_dimming) {
-        state.brightness = b.brightness;
+    state.has_dimming = base.has_dimming || joiner.has_dimming;
+    if ((base.on && joiner.on) && base.has_dimming && joiner.has_dimming) {
+        state.brightness = (base.brightness + joiner.brightness) / 2.0;
+    } else if (base.on && base.has_dimming) {
+        state.brightness = base.brightness;
+    } else if (joiner.on && joiner.has_dimming) {
+        state.brightness = joiner.brightness;
     }
 
-    state.has_color = a.has_color || b.has_color;
-    if ((a.on_any && b.on_any) && a.has_color && b.has_color) {
-        double red  = (a.color.red() + b.color.red()) / 2.0;
-        double green  = (a.color.green() + b.color.green()) / 2.0;
-        double blue  = (a.color.blue() + b.color.blue()) / 2.0;
-        double alpha  = (a.color.alpha() + b.color.alpha()) / 2.0;
+    state.has_color = base.has_color || joiner.has_color;
+    if ((base.on && joiner.on) && base.has_color && joiner.has_color) {
+        double red  = (base.color.red() + joiner.color.red()) / 2.0;
+        double green  = (base.color.green() + joiner.color.green()) / 2.0;
+        double blue  = (base.color.blue() + joiner.color.blue()) / 2.0;
+        double alpha  = (base.color.alpha() + joiner.color.alpha()) / 2.0;
 
         state.color = QColor::fromRgb(red, green, blue, alpha);
 
-    } else if (a.on_any && a.has_color) {
-        state.color = a.color;
-    } else if (b.on_any && b.has_color) {
-        state.color = b.color;
+    } else if (base.on && base.has_color) {
+        state.color = base.color;
+    } else if (joiner.on && joiner.has_color) {
+        state.color = joiner.color;
     }
 
-    state.has_color_temperature = a.has_color_temperature || b.has_color_temperature;
-    if ((a.on_any && b.on_any) && a.has_color_temperature && b.has_color_temperature) {
-        if (a.color_temperature != 0 && b.color_temperature != 0) {
-
-            state.color_temperature = (a.color_temperature + b.color_temperature) / 2;
-
-        } else if (a.color_temperature != 0) {
-            state.color_temperature = a.color_temperature;
-        } else if (b.color_temperature != 0) {
-            state.color_temperature = b.color_temperature;
+    state.has_color_temperature = base.has_color_temperature || joiner.has_color_temperature;
+    if ((base.on && joiner.on) && base.has_color_temperature && joiner.has_color_temperature) {
+        if (base.color_temperature != 0 && joiner.color_temperature != 0) {
+            state.color_temperature = (base.color_temperature + joiner.color_temperature) / 2.0;
+        } else if (base.color_temperature != 0) {
+            state.color_temperature = base.color_temperature;
+        } else if (joiner.color_temperature != 0) {
+            state.color_temperature = joiner.color_temperature;
         }
 
-        state.color_temperature_minimum = qMin(a.color_temperature_minimum, b.color_temperature_minimum);
-        state.color_temperature_maximum = qMax(a.color_temperature_maximum, b.color_temperature_maximum);
-    } else if (a.on_any && a.has_color_temperature) {
-        state.color_temperature_minimum = a.color_temperature_minimum;
-        state.color_temperature_maximum = a.color_temperature_maximum;
-    } else if (b.on_any && b.has_color_temperature) {
-        state.color_temperature_minimum = b.color_temperature_minimum;
-        state.color_temperature_maximum = b.color_temperature_maximum;
-    }
-
-    return state;
-}
-
-ItemState getStateById(QJsonObject json, QString id)
-{
-    ItemState state;
-    QString type = getTypeById(json, id);
-
-    if (type == "room" || type == "zone" || type == "bridge_home") {
-        QJsonArray services_array = getServicesById(json, id);
-
-        state.ids.append(id);
-
-        for (int i = 0; i < services_array.size(); ++i) {
-            QJsonObject item = services_array[i].toObject();
-
-            QString rid = item["rid"].toString();
-            ItemState partial_state = getStateById(json, rid);
-
-            state = combineTwoStates(state, partial_state);
-
-            state.ids.append(rid);
-        }
-    }
-
-    if (type == "light") {
-        state = getLightState(json, id);
-
-        state.ids.append(id);
+        state.color_temperature_minimum = qMin(base.color_temperature_minimum, joiner.color_temperature_minimum);
+        state.color_temperature_maximum = qMax(base.color_temperature_maximum, joiner.color_temperature_maximum);
+    } else if (base.on && base.has_color_temperature) {
+        state.color_temperature_minimum = base.color_temperature_minimum;
+        state.color_temperature_maximum = base.color_temperature_maximum;
+    } else if (joiner.on && joiner.has_color_temperature) {
+        state.color_temperature_minimum = joiner.color_temperature_minimum;
+        state.color_temperature_maximum = joiner.color_temperature_maximum;
     }
 
     return state;

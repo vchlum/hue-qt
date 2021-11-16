@@ -51,12 +51,12 @@ void ColorWheel::resizeEvent(QResizeEvent *e)
 
 
 QSize ColorWheel::sizeHint() const {
-    return QSize(180, 180);
+    return QSize(width(), height());
 }
 
 TemperatureBox::TemperatureBox(QWidget *parent): QWidget(parent)
 {
-     color = new QColor(255, 255, 255, 1);
+    color = new QColor(255, 255, 255, 1);
     h = color->hueF();
     s = color->saturationF();
     v = color->valueF();
@@ -97,20 +97,35 @@ void TemperatureBox::resizeEvent(QResizeEvent *e)
 
 
 QSize TemperatureBox::sizeHint() const {
-    return QSize(180, 50);
+    return QSize(width(), height());
 }
 
 ColorPicker::ColorPicker(QWidget *parent): QWidget(parent)
 {
-
+    int tmp_size = 250;
     main_layout = new QVBoxLayout(this);
 
     main_layout->setContentsMargins(0, 0, 0, 0);
 
     ColorWheel* color_wheel = new ColorWheel(this);
+
+    color_wheel->setMinimumHeight(tmp_size);
+    color_wheel->setMinimumWidth(tmp_size);
+    color_wheel->setMaximumHeight(tmp_size);
+    color_wheel->setMaximumWidth(tmp_size);
+
     main_layout->addWidget(color_wheel);
 
     TemperatureBox* temperature_box = new TemperatureBox(this);
+
+    temperature_box->setMinimumHeight(tmp_size / 4.5);
+    temperature_box->setMinimumWidth(tmp_size);
+    temperature_box->setMaximumHeight(tmp_size / 4.5);
+    temperature_box->setMaximumWidth(tmp_size);
+
     main_layout->addWidget(temperature_box);
 }
 
+QSize ColorPicker::sizeHint() const {
+    return main_layout->sizeHint();
+}

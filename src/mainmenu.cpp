@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -58,7 +58,7 @@ Menu::Menu(QWidget *parent): QWidget(parent, Qt::FramelessWindowHint | Qt::Windo
 
         if (bridge->known()) {
             bridge->getStatus();
-            bridge->getConfig();
+            bridge->getConfig1();
         }
     }
 
@@ -189,7 +189,7 @@ QWidget* Menu::createDeviceMenu()
     QHBoxLayout *device_layout = new QHBoxLayout(device_widget);
 
     device_label = new QLabel();
-    device_label->setText("Hue Lights 2");
+    device_label->setText("Hue-QT");
     device_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
     device_layout->addWidget(device_label);
 
@@ -281,7 +281,7 @@ void Menu::rebuildAll()
         device_label->setText(bridge->deviceName());
 
         if (bridge->known()) {
-            bridge->getConfig();
+            bridge->getConfig1();
         }
 
         BridgeWidget *bridge_widget = new BridgeWidget(bridge, this);

@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -35,6 +35,8 @@ void MenuSlider::setColor(QColor color)
 
     //https://doc.qt.io/archives/qt-4.8/stylesheet-examples.html#customizing-qslider
 
+    QString semi_transparent = QString("rgba(%1, %2, %3, 150)").arg(color.red()).arg(color.green()).arg(color.blue());
+
     setStyleSheet("\
         QSlider {border-right: 8px solid transparent;}\
         QSlider::groove:horizontal {\
@@ -55,7 +57,7 @@ void MenuSlider::setColor(QColor color)
         QSlider::sub-page:horizontal {\
             border: 0px solid #999999;\
             height: 8px;\
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 " + color.name() + ", stop:1 #c4c4c4);\
+            background: " + semi_transparent + ";\
             margin: 2px 0;\
         }\
         QSlider::add-page:horizontal {\

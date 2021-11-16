@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,18 +33,19 @@ class MenuButton : public QPushButton
         QString identifier;
         bool has_slider;
         bool has_switch;
-        bool all_items = false;
         QLabel *label;
         QLabel *icon;
         MenuSlider *slider;
         MenuSwitch *button_switch;
+        bool combined_state;
 
     public slots:
 
     signals:
         void buttonRemoved(QString s);
+        void goBack();
     public:
-        explicit MenuButton(QString item_id, bool use_slider, bool use_switch, QWidget *parent = 0);
+        explicit MenuButton(QString item_id, bool use_slider, int points, bool use_back, bool use_switch, QWidget *parent = 0);
         ~MenuButton() { emit buttonRemoved(id()); }
         QString id();
         void setText(QString text);
@@ -52,8 +53,23 @@ class MenuButton : public QPushButton
         void setColor(QColor color);
         void setSwitch(bool on);
         void setSlider(int value);
-        void setAllItems(bool all);
-        bool allItems();
+        void setCombined(bool all);
+        bool combined();
+};
+
+class ClickableLabel : public QLabel
+{
+    Q_OBJECT
+
+    public:
+        explicit ClickableLabel(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+        ~ClickableLabel();
+
+    signals:
+        void clicked();
+
+    protected:
+        void mousePressEvent(QMouseEvent* event);
 };
 
 #endif // MENUBUTTON_H

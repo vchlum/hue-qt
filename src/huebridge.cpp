@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -32,8 +32,8 @@ HueBridge::HueBridge(QString ip, HueDevice *parent): HueDevice(ip, parent)
 
     connect(this, SIGNAL(requestDeviceFinished(const QVariant, const QString)), this, SLOT(bridgeRequestFinished(const QVariant, const QString)));
 
-    connect(this, SIGNAL(connected()), this, SLOT(startEvent()));
-    connect(this, SIGNAL(disconnected()), this, SLOT(stopEvent()));
+    connect(this, SIGNAL(connected()), this, SLOT(startEventStream()));
+    connect(this, SIGNAL(disconnected()), this, SLOT(stopEventStream()));
 }
 
 void HueBridge::setUserName(QString s)
@@ -105,7 +105,7 @@ QJsonObject HueBridge::dumpBridge()
 
 void HueBridge::createUser()
 {
-    QString user = "hue-lights-2#";
+    QString user = "hue-qt#";
     user += QHostInfo::localHostName().left(15);
 
     QJsonObject json;
@@ -120,7 +120,7 @@ void HueBridge::createUser()
     sendRequestPOST(url, (QNetworkRequest::Attribute) req_create_user, bytes);
 }
 
-void HueBridge::runEvent()
+void HueBridge::runEventStream()
 {
     if (!events_running) {
         return;
@@ -130,6 +130,8 @@ void HueBridge::runEvent()
 
     QNetworkRequest request;
     request.setUrl(QUrl(url));
+    request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::AlwaysNetwork); // Events shouldn't be cached
+
     foreach (const QStringList &header, request_headers) {
         if (header.isEmpty()) {
             break;
@@ -142,13 +144,14 @@ void HueBridge::runEvent()
 }
 
 
-void HueBridge::startEvent()
+void HueBridge::startEventStream()
 {
     events_running = true;
-    runEvent();
+    event_retries = 0;
+    runEventStream();
 }
 
-void HueBridge::stopEvent()
+void HueBridge::stopEventStream()
 {
     events_running = false;
 }
@@ -156,10 +159,15 @@ void HueBridge::stopEvent()
 void HueBridge::eventRequestFinished(QNetworkReply *reply)
 {
     if (reply->error()) {
-        qWarning() << "request reply on event stream error: " + reply->errorString();
-
-        runEvent();
-        return;
+        if(event_retries < 10) {
+            qWarning() << "request reply on event stream error: " + reply->errorString();
+            event_retries++;
+            runEventStream();
+            return;
+        } else {
+            qCritical() << "Unable to reconnect event stream, max retries reached";
+            return;
+        }
     }
 
     QString ret = reply->readAll();
@@ -167,13 +175,11 @@ void HueBridge::eventRequestFinished(QNetworkReply *reply)
     QJsonArray json_array = QString2QJsonArray(ret);
 
     if (json_array.size() > 0) {
-        for (int i = 0; i < json_array.size(); ++i) {
-            QJsonObject json = json_array[i].toObject();
-            emit event(json);
-        }
+        emit events(json_array);
     }
 
-    runEvent();
+    event_retries = 0;
+    runEventStream();
 }
 
 void HueBridge::bridgeRequestFinished(const QVariant type, const QString ret)
@@ -187,7 +193,7 @@ void HueBridge::bridgeRequestFinished(const QVariant type, const QString ret)
                 break;
             }
 
-        case req_bridge_status:
+        case req_bridge_status_v1:
             {
                 break;
             }
@@ -200,7 +206,7 @@ void HueBridge::bridgeRequestFinished(const QVariant type, const QString ret)
                 break;
             }
 
-        case req_bridge_config:
+        case req_bridge_config_v1:
             {
                 QString device_config = ret;
                 QJsonObject json = QString2QJsonObject(device_config);
@@ -245,19 +251,19 @@ void HueBridge::readCreateUser(QString ret)
     }
 }
 
-void HueBridge::getStatus()
+void HueBridge::getStatus1()
 {
     QString url = url_api_v1_user.arg(ip(), user_name, "");
-    sendRequestGET(url, (QNetworkRequest::Attribute) req_bridge_status);
+    sendRequestGET(url, (QNetworkRequest::Attribute) req_bridge_status_v1);
 }
 
-void HueBridge::getConfig()
+void HueBridge::getConfig1()
 {
     QString url = url_api_v1_user.arg(ip(), user_name, "config");
-    sendRequestGET(url, (QNetworkRequest::Attribute) req_bridge_config);
+    sendRequestGET(url, (QNetworkRequest::Attribute) req_bridge_config_v1);
 }
 
-void HueBridge::getStatus2()
+void HueBridge::getStatus()
 {
     QString url = url_api_v2.arg(ip());
     sendRequestGET(url, (QNetworkRequest::Attribute) req_bridge_status_v2);

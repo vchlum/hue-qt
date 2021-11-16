@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -26,7 +26,7 @@ BridgeWidget::BridgeWidget(HueBridge *showed_bridge, QWidget *parent): QWidget(p
 {
     bridge = showed_bridge;
     connect(bridge, SIGNAL(statusV2(QJsonObject)), this, SLOT(updateBridge(QJsonObject)));
-    connect(bridge, SIGNAL(event(QJsonObject)), this, SLOT(processEvent(QJsonObject)));
+    connect(bridge, SIGNAL(events(QJsonArray&)), this, SLOT(processEvents(QJsonArray&)));
 
     QVBoxLayout* main_layout = new QVBoxLayout(this);
 
@@ -48,7 +48,7 @@ BridgeWidget::BridgeWidget(HueBridge *showed_bridge, QWidget *parent): QWidget(p
     connect(scenes, SIGNAL(menuToggled()), this, SLOT(autoResize()));
     main_layout->addWidget(scenes);
 
-    bridge->getStatus2();
+    bridge->getStatus();
 }
 
 void BridgeWidget::autoResize()
@@ -64,7 +64,7 @@ void BridgeWidget::groupClicked()
     selected_light = "";
 
     // set* inplicates colapsing the expanded area
-    setLights(selected_group, selected_light);
+    setLights(selected_group);
     setColorsTemperature(selected_light, selected_group);
     setScenes(selected_group);
 
@@ -72,8 +72,6 @@ void BridgeWidget::groupClicked()
     lights->toggle(true);
     colors->toggle(false);
     scenes->toggle(false);
-
-    bridge->getStatus2();
 }
 
 void BridgeWidget::lightClicked()
@@ -88,8 +86,6 @@ void BridgeWidget::lightClicked()
     lights->toggle(false);
     colors->toggle(true);
     scenes->toggle(false);
-
-    bridge->getStatus2();
 }
 
 void BridgeWidget::sceneClicked()
@@ -101,166 +97,314 @@ void BridgeWidget::sceneClicked()
     lights->toggle(false);
     colors->toggle(false);
     scenes->toggle(true);
-
-    bridge->getStatus2();
 }
 
-void BridgeWidget::updateButtonList(QString main_id)
+void BridgeWidget::removeFromButtonList(QString main_id)
 {
     MenuButton *btn = qobject_cast<MenuButton *>(sender());
 
     refresh_button_list.remove(btn);
 }
 
-void BridgeWidget::setItemState(MenuButton* item, ItemState state, bool all_items_on)
+
+void BridgeWidget::addGroupState(QJsonObject json)
 {
+    QString id;
+
+    if (! json.contains("id")) {
+        return;
+    }
+
+    id = json["id"].toString();
+
+    if (json["type"].toString() == "bridge_home") {
+        bridge_home_id = id;
+    }
+
+    states_groups[id] = getGroupFromJson(json);
+}
+
+void BridgeWidget::addLightState(QJsonObject json)
+{
+    QString id;
+
+    if (! json.contains("id")) {
+        return;
+    }
+
+    id = json["id"].toString();
+    states_lights[id] = getLightFromJson(json);
+}
+
+void BridgeWidget::addSceneState(QJsonObject json)
+{
+    QString id;
+
+    if (! json.contains("id")) {
+        return;
+    }
+
+    id = json["id"].toString();
+    states_scenes[id] = getSceneFromJson(json);
+}
+
+QMap<QString, ItemState>* BridgeWidget::getStatesByType(QString type)
+{
+    if (type == "bridge_home")
+        return &states_groups;
+
+    else if (type == "room")
+        return &states_groups;
+
+    else if (type == "zone")
+        return &states_groups;
+
+    else if (type == "light")
+        return &states_lights;
+
+    else if (type == "scene")
+        return &states_scenes;
+
+    return NULL;
+}
+
+void BridgeWidget::createStates(QJsonObject json)
+{
+    QJsonObject json_item;
+    QString type;
+
+    states_groups.clear();
+    states_lights.clear();
+    states_scenes.clear();
+
+    if (! json.contains("data")) {
+        return;
+    }
+
+    QJsonArray json_array = json["data"].toArray();
+
+    for (int i = 0; i < json_array.size(); ++i) {
+        QJsonObject json_item = json_array[i].toObject();
+
+        if (! json_item.contains("type")) {
+            continue;
+        }
+
+        type = json_item["type"].toString();
+
+        if (type == "bridge_home")
+            addGroupState(json_item);
+
+        else if (type == "room")
+            addGroupState(json_item);
+
+        else if (type == "zone")
+            addGroupState(json_item);
+
+        else if (type == "light")
+            addLightState(json_item);
+
+        else if (type == "scene")
+            addSceneState(json_item);
+    }
+}
+
+void BridgeWidget::updateButtonState(MenuButton* button, ItemState state)
+{
+    if (state.dummy) {
+        return;
+    }
+
     bool is_on = false;
     if (state.has_on) {
-        if (all_items_on) {
-            item->setSwitch(state.on_all);
-            if (state.on_all) {
-                is_on = true;
-            }
-        } else {
-            item->setSwitch(state.on_any);
-            if (state.on_any) {
-                is_on = true;
-            }
-        }
+        is_on = state.on;
+        button->setSwitch(is_on);
     }
 
     if (state.has_dimming) {
         if (is_on) {
-            item->setSlider(state.brightness);
+            button->setSlider(state.brightness);
         } else {
-            item->setSlider(0);
+            button->setSlider(0);
         }
     }
 
     QColor off_color = QColor("#2E2E2E");
     if (state.has_color) {
         if (is_on) {
-            item->setColor(state.color);
+            button->setColor(state.color);
         } else {
-            item->setColor(off_color);
+            button->setColor(off_color);
         }
     } else {
-        item->setColor(off_color);
+        button->setColor(off_color);
     }
 
-    item->setAllItems(all_items_on);
+    if (button->id() == "" || state.type == "")
+        throw;
+
+    refresh_button_list[button] = state.type;
 }
 
-MenuButton* BridgeWidget::createMenuButton(QString id, MenuExpendable* menu, void (BridgeWidget::*button_slot)(), QString custom_text)
+MenuButton* BridgeWidget::createMenuButton(MenuExpendable* menu, ItemState state, void (BridgeWidget::*button_slot)(), bool back_button, QString custom_text)
 {
-    QJsonObject json_item;
+    QString id;
     MenuButton* button;
-    ItemState state;
 
-    json_item = getItemById(bridge_data, id);
-    state = getStateById(bridge_data, id);
+    id = state.id;
 
-    button = new MenuButton(id, state.has_dimming, state.has_on, menu);
-    connect(button, SIGNAL(buttonRemoved(QString)), this, SLOT(updateButtonList(QString)));
-    refresh_button_list[button] = state.ids;
+    button = new MenuButton(id, state.has_dimming, state.gradient_points_capable, back_button, state.has_on, menu);
+
+    if (!state.dummy) {
+        connect(button, SIGNAL(buttonRemoved(QString)), this, SLOT(removeFromButtonList(QString)));
+    }
 
     button->setIcon(":images/HueIcons/devicesBridgesV2.svg");
 
     if (custom_text != "") {
         button->setText(custom_text);
     } else {
-        button->setText(json_item["metadata"].toObject()["name"].toString());
+        button->setText(state.name);
     }
 
     if (button_slot != NULL) {
         connect(button, &MenuButton::clicked, this, button_slot);
     }
 
-    setItemState(button, state, false);
+    updateButtonState(button, state);
 
     return button;
 }
 
-void BridgeWidget::setGroups(QString head_group_id)
+ItemState BridgeWidget::getCombinedGroupState(ItemState base_state)
 {
-    QString home_id;
+    ItemState state = base_state;
     QString id;
-    QList<QString> group_names = { "zone", "room" };
-    MenuButton* item;
-    QJsonArray data_array;
-    QJsonObject json_item;
+    QString type;
 
-    if (! bridge_data.contains("data")) {
-        return;
-    }
+    QMapIterator<QString, QString> service(state.services);
+    while (service.hasNext()) {
+        service.next();
 
-    groups->clearContentButtons();
+        id = service.key();
+        type = service.value();
 
-    data_array = getItemsByType(bridge_data, "bridge_home");
-    home_id = data_array.at(0).toObject()["id"].toString();
-
-    item = createMenuButton(home_id, groups, NULL, bridge->deviceName());
-    groups->setHeadMenuButton(*item);
-
-    for (int n = 0; n  < group_names.size(); ++n) {
-
-        data_array = getItemsByType(bridge_data, group_names.at(n));
-
-        for (int i = 0; i < data_array.size(); ++i) {
-
-            json_item = data_array[i].toObject();
-            id = json_item["id"].toString();
-
-            item = createMenuButton(id, groups, &BridgeWidget::groupClicked);
-            groups->addContentMenuButton(*item);
-        }
-    }
-
-    return;
-}
-
-void BridgeWidget::setLights(QString group_id, QString light_id)
-{
-    QJsonObject json_item;
-    MenuButton* item;
-    QJsonArray data_array;
-    QJsonArray services_array;
-    QString rid;
-    QString home_id;
-    int counter = 0;
-    QString button_text;
-
-    if (! bridge_data.contains("data")) {
-        return;
-    }
-
-    lights->clearContentButtons();
-
-    data_array = getItemsByType(bridge_data, "bridge_home");
-    home_id = data_array.at(0).toObject()["id"].toString();
-
-    if (group_id == home_id){
-        button_text = tr("All lights");
-    } else {
-        button_text = "";
-    }
-
-    item = createMenuButton(group_id, lights, NULL, button_text);
-    lights->setHeadMenuButton(*item);
-
-    services_array = getServicesById(bridge_data, group_id);
-
-    for (int i = 0; i < services_array.size(); ++i) {
-        json_item = services_array[i].toObject();
-
-        if (json_item["rtype"].toString() != "light") {
+        if (type != "light") {
             continue;
         }
 
-        rid = json_item["rid"].toString();
+        state = combineTwoStates(state, states_lights[id]);
+    }
 
-        item = createMenuButton(rid, lights, &BridgeWidget::lightClicked);
-        lights->addContentMenuButton(*item);
+    state.services = base_state.services;
+
+    return state;
+}
+
+void BridgeWidget::setGroups()
+{
+    QString id;
+    ItemState state;
+    MenuButton* button;
+    int counter = 0;
+
+    groups->clearContentButtons();
+
+    id = bridge_home_id;
+    state = states_groups[id];
+    state = getCombinedGroupState(state);
+    button = createMenuButton(groups, state, NULL, false, bridge->deviceName());
+    button->setCombined(true);
+    groups->setHeadMenuButton(*button);
+
+    QMapIterator<QString, ItemState> item(states_groups);
+    while (item.hasNext()) {
+        item.next();
+
+        id = item.key();
+        state = item.value();
+
+        if (id == bridge_home_id) {
+            continue;
+        }
+
+        state = getCombinedGroupState(state);
+        button = createMenuButton(groups, state, &BridgeWidget::groupClicked, false);
+        button->setCombined(true);
+        groups->addContentMenuButton(*button);
+
+        counter++;
+    }
+
+    if (counter == 0) {
+        groups->setVisible(false);
+    } else {
+        groups->setVisible(true);
+    }
+}
+
+void BridgeWidget::setLights(QString group_id)
+{
+    QString id;
+    ItemState state;
+    ItemState state_selected_group;
+    bool group_selected;
+    MenuButton* button;
+    QString button_text;
+    int counter = 0;
+
+    lights->clearContentButtons();
+
+    if (group_id == bridge_home_id){
+        button_text = tr("All lights");
+    } else {
+        button_text = "";
+        group_selected = true;
+    }
+
+    state = states_groups[group_id];
+    state = getCombinedGroupState(state);
+    button = createMenuButton(lights, state, NULL, group_selected, button_text);
+    button->setCombined(true);
+    lights->setHeadMenuButton(*button);
+
+    if (group_selected) {
+        connect(button, &MenuButton::goBack, [this]() {
+
+            selected_group = bridge_home_id;
+            selected_light = "";
+
+            // set* inplicates colapsing the expanded area
+            setLights(selected_group);
+            setColorsTemperature(selected_light, selected_group);
+            setScenes(selected_group);
+
+            groups->toggle(true);
+            lights->toggle(false);
+            colors->toggle(false);
+            scenes->toggle(false);
+        });
+    }
+
+    state_selected_group = states_groups[group_id];
+
+    QMapIterator<QString, ItemState> item(states_lights);
+    while (item.hasNext()) {
+        item.next();
+
+        id = item.key();
+
+        if (! state_selected_group.services.contains(id)) {
+            continue;
+        }
+
+        if (state_selected_group.services[id] != "light") {
+            continue;
+        }
+
+        state = item.value();
+        button = createMenuButton(lights, state, &BridgeWidget::lightClicked, false);
+        lights->addContentMenuButton(*button);
 
         counter++;
     }
@@ -270,76 +414,94 @@ void BridgeWidget::setLights(QString group_id, QString light_id)
     } else {
         lights->setVisible(true);
     }
-
-    return;
 }
 
 void BridgeWidget::setColorsTemperature(QString light_id, QString group_id)
 {
-    MenuButton* item;
-    QJsonObject json_item;
     QString id;
+    MenuButton* button;
     ItemState state;
-    QJsonArray data_array;
-    QString home_id;
     QString button_text;
+    bool light_selected = false;
 
-    if (! bridge_data.contains("data")) {
-        return;
-    }
-
-    data_array = getItemsByType(bridge_data, "bridge_home");
-    home_id = data_array.at(0).toObject()["id"].toString();
-
-    if (group_id == home_id && light_id == ""){
+    if (group_id == bridge_home_id && light_id == ""){
         button_text = tr("All lights");
     } else {
         button_text = "";
+
+        if (light_id != "")
+            light_selected = true;
     }
 
     id = light_id == "" ? group_id : light_id;
 
-    item = createMenuButton(id, colors, NULL, button_text);
-    colors->setHeadMenuButton(*item);
+    state = light_id == "" ? states_groups[id] : states_lights[id] ;
+
+    button = createMenuButton(colors, state, NULL, light_selected, button_text);
+    colors->setHeadMenuButton(*button);
+
+    if (light_selected) {
+        connect(button, &MenuButton::goBack, [this]() {
+
+            if (selected_light != "") {
+                selected_light = "";
+            } else {
+                selected_group = bridge_home_id;
+            }
+
+            // set* inplicates colapsing the expanded area
+            setLights(selected_group);
+            setColorsTemperature(selected_light, selected_group);
+            setScenes(selected_group);
+            if (selected_group == bridge_home_id) {
+                groups->toggle(true);
+                lights->toggle(false);
+            } else {
+                groups->toggle(false);
+                lights->toggle(true);
+            }
+            colors->toggle(false);
+            scenes->toggle(false);
+        });
+    }
 
     ColorPicker *color_picker = new ColorPicker();
     colors->setContentWidget(*color_picker);
 }
 
-void BridgeWidget::setScenes(QString head_id)
+void BridgeWidget::setScenes(QString group_id)
 {
     QString id;
-    MenuButton* item;
-    QJsonArray data_array;
+    MenuButton* button;
+    ItemState state;
     int counter = 0;
-
-    if (! bridge_data.contains("data")) {
-        return;
-    }
 
     scenes->clearContentButtons();
 
-    data_array = getItemsByType(bridge_data, "bridge_home");
-    id = data_array.at(0).toObject()["id"].toString();
+    if (group_id == bridge_home_id) {
+        scenes->setVisible(false);
+        return;
+    } else {
+        scenes->setVisible(true);
+    }
 
-    item = new MenuButton(id, false, false, scenes);
-    item->setText(tr("Scenes"));
-    scenes->setHeadMenuButton(*item);
+    state.dummy = true;
+    button = createMenuButton(scenes, state, NULL, false, tr("Scenes"));
+    scenes->setHeadMenuButton(*button);
 
-    data_array = getItemsByType(bridge_data, "scene");
+    QMapIterator<QString, ItemState> item(states_scenes);
+    while (item.hasNext()) {
+        item.next();
 
-    for (int i = 0; i < data_array.size(); ++i) {
-        QJsonObject json_item = data_array[i].toObject();
-        if (json_item["group"].toObject()["rid"].toString() != head_id) {
+        id = item.key();
+        state = item.value();
+
+        if (state.group_id != group_id) {
             continue;
         }
 
-        id = json_item["id"].toString();
-
-        item = new MenuButton(id, false, false, scenes);
-        item->setText(json_item["metadata"].toObject()["name"].toString());
-        connect(item, SIGNAL(clicked()), this, SLOT(sceneClicked()));
-        scenes->addContentMenuButton(*item);
+        button = createMenuButton(scenes, state, &BridgeWidget::sceneClicked, false);
+        scenes->addContentMenuButton(*button);
 
         counter++;
     }
@@ -357,31 +519,34 @@ void BridgeWidget::updateAllButtons()
 {
     ItemState state;
     MenuButton* btn;
+    QString type;
+    QMap<QString, ItemState> *states;
 
-    QMapIterator<MenuButton*, QVarLengthArray<QString>> i(refresh_button_list);
+    QMapIterator<MenuButton*, QString> i(refresh_button_list);
     while (i.hasNext()) {
         i.next();
 
         btn = i.key();
-        state = getStateById(bridge_data, btn->id());
-        setItemState(btn, state, btn->allItems());
+        type = i.value();
+
+        states = getStatesByType(type);
+        state = (*states)[btn->id()];
+
+        updateButtonState(btn, state);
     }
 }
 
 void BridgeWidget::updateBridge(QJsonObject json)
 {
-    QJsonArray data_array;
-
-    bridge_data = json;
+    createStates(json);
 
     if (selected_group == "") {
-        data_array = getItemsByType(bridge_data, "bridge_home");
-        selected_group = data_array.at(0).toObject()["id"].toString();
+        selected_group = bridge_home_id;
     }
 
     if (rebuild) {
-        setGroups(selected_group);
-        setLights(selected_group, selected_light);
+        setGroups();
+        setLights(selected_group);
         setColorsTemperature(selected_light, selected_group);
         setScenes(selected_group);
 
@@ -396,20 +561,103 @@ void BridgeWidget::updateBridge(QJsonObject json)
     rebuild = false;
 }
 
-void BridgeWidget::processEvent(QJsonObject json)
+QString BridgeWidget::updateStateByEvent(QJsonObject json)
 {
-    if (json["type"].toString() == "update") {
-        if (! json.contains("data")) {
-            return;
+    QString id;
+    QString type;
+    QMap<QString, ItemState> *states;
+    ItemState state;
+
+    if (!json.contains("id")) {
+        return "";
+    }
+
+    id = json["id"].toString();
+    type = json["type"].toString();
+
+    states = getStatesByType(type);
+    state = (*states)[id];
+
+    state = updateState(state, json);
+
+    (*states)[id] = state;
+
+    return id;
+}
+
+void BridgeWidget::updateRelatedButtons(QVarLengthArray<QString> updated_list)
+{
+    MenuButton* button;
+    QString type;
+    ItemState state;
+    QMap<QString, ItemState> *states;
+
+    QMapIterator<MenuButton*, QString> i(refresh_button_list);
+    while (i.hasNext()) {
+        i.next();
+
+        button = i.key();
+        type = i.value();
+
+        if (updated_list.contains(button->id())) {
+            states = getStatesByType(type);
+            state = (*states)[button->id()];
+            updateButtonState(button, state);
         }
 
-        QJsonArray json_array = json["data"].toArray();
-        if (json_array.size() > 0) {
-            for (int i = 0; i < json_array.size(); ++i) {
-                QJsonObject json_update_data = json_array[i].toObject();
+        if (button->combined()) {            
+            states = getStatesByType(type);
+            state = (*states)[button->id()];
 
-                bridge->getStatus2();
+            bool affected = false;
+
+            QMapIterator<QString, QString> j(state.services);
+            while (j.hasNext()) {
+                j.next();
+
+                if (updated_list.contains(j.key())) {
+                    affected = true;
+                    break;
+                }
+            }
+
+            if (affected) {
+                state = getCombinedGroupState(state);
+                updateButtonState(button, state);
             }
         }
     }
+}
+
+void BridgeWidget::processEvents(QJsonArray &json_array)
+{
+    QJsonObject json;
+    QString updated;
+    QVarLengthArray<QString> updated_list;
+
+    updated_list.resize(json_array.size());
+
+    for (int i = 0; i < json_array.size(); ++i) {
+        json = json_array[i].toObject();
+
+        if (! json.contains("data")) {
+            continue;
+        }
+
+        if (json["type"].toString() != "update") {
+            continue;
+        }
+
+        QJsonArray json_event_array = json["data"].toArray();
+        for (int j = 0; j < json_event_array.size(); ++j) {
+            QJsonObject json_event = json_event_array[j].toObject();
+
+            if (json_event["type"].toString() == "light") {
+                updated = updateStateByEvent(json_event);
+                updated_list.append(updated);
+            }
+        }
+    }
+
+    updateRelatedButtons(updated_list);
 }

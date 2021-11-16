@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -22,11 +22,18 @@
 #include <QJsonArray>
 #include <QColor>
 
+#include <menubutton.h>
+
 struct ItemState {
+    bool dummy = false; // true -> this state is not useful
+
+    QString id = "";
+    QString type = "";
+    QString name = "";
+    QString archetype = "";
+
     bool has_on = false;
     bool on = false;
-    bool on_any = false;
-    bool on_all = false;
 
     bool has_dimming = false;
     int brightness = 0;
@@ -39,16 +46,23 @@ struct ItemState {
     int color_temperature_minimum = 0;
     int color_temperature_maximum = 0;
 
-    QVarLengthArray<QString> ids;
-} ;
+    bool has_gradient = false;
+    int gradient_points_capable = 0;
 
-QJsonObject getItemById(QJsonObject json, QString id);
-QString getTypeById(QJsonObject json, QString id);
-QJsonArray getItemsByType(QJsonObject json, QString type);
-QJsonArray getServicesById(QJsonObject json, QString id);
+    QMap<QString, QString> services; // <rid, rtype>
 
-ItemState getLightState(QJsonObject json, QString id);
-ItemState getStateById(QJsonObject json, QString id);
+    QString group_id = ""; // scene affiliation
+    QString group_type = "";
+
+    QVarLengthArray<MenuButton*> items;
+};
+
+ItemState getLightFromJson(QJsonObject json);
+ItemState getGroupFromJson(QJsonObject json);
+ItemState getSceneFromJson(QJsonObject json);
+
+ItemState updateState(ItemState state, QJsonObject json);
+ItemState combineTwoStates(ItemState base, ItemState joiner);
 
 /*
  Convert xy and brightness to RGB

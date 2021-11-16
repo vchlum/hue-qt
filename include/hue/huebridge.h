@@ -1,4 +1,4 @@
-/* Hue Lights 2 - Application for controlling Philips Hue Bridge and HDMI Syncbox
+/* Hue-QT - Application for controlling Philips Hue Bridge and HDMI Syncbox
  * Copyright (C) 2021 Václav Chlumský
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,8 +29,8 @@ enum HueBridgeRequestTypes {
     req_discovery_bridges,
     req_discovery_bridge,
     req_create_user,
-    req_bridge_status,
-    req_bridge_config,
+    req_bridge_status_v1,
+    req_bridge_config_v1,
     req_bridge_status_v2
 };
 
@@ -68,9 +68,9 @@ class HueBridge : public HueDevice
         bool updateBridgeInfo(QJsonObject data);
         QJsonObject dumpBridge();
         void createUser();
+        void getStatus1();
+        void getConfig1();
         void getStatus();
-        void getConfig();
-        void getStatus2();
 
     private:
         QString url_api_v1 = "http://%1/api";
@@ -81,12 +81,13 @@ class HueBridge : public HueDevice
         QString client_key = "";
         bool events_running = false;
         QNetworkAccessManager *event_manager;
+        int event_retries = 0;
 
         void readCreateUser(QString ret);
-        void runEvent();
+        void runEventStream();
 
     signals:
-        void event(QJsonObject json);
+        void events(QJsonArray &json_array);
         void userCreationFailed();
         void userCreationSucceed();
         void infoUpdated();
@@ -94,8 +95,8 @@ class HueBridge : public HueDevice
 
     private slots:
         void bridgeRequestFinished(const QVariant type, const QString ret);
-        void startEvent();
-        void stopEvent();
+        void startEventStream();
+        void stopEventStream();
         void eventRequestFinished(QNetworkReply *reply);
 };
 #endif // HUEBRIDGE_H

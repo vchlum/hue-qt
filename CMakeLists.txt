@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(
-    Hue-Lights-2
+    hue-qt
     VERSION 0.1
-    DESCRIPTION "Hue Lights 2"
+    DESCRIPTION "Hue-QT"
     LANGUAGES CXX
 )
 
