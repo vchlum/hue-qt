@@ -31,7 +31,8 @@ set(HEADER_MENU_LIST
     ${MENU_INCLUDE}/menucolorpicker.h
     ${MENU_INCLUDE}/menuexpendable.h
     ${MENU_INCLUDE}/menuslider.h
-    ${MENU_INCLUDE}/menuswitch.h)
+    ${MENU_INCLUDE}/menuswitch.h
+    ${MENU_INCLUDE}/menuutils.h)
 qt_add_library(menu
     ${CMAKE_SOURCE_DIR}/resources/menu_resources.qrc
     menubutton.cpp
@@ -39,6 +40,7 @@ qt_add_library(menu
     menuexpendable.cpp
     menuslider.cpp
     menuswitch.cpp
+    menuutils.cpp
     ${HEADER_MENU_LIST}
 )
 target_include_directories(menu PUBLIC ${MENU_INCLUDE})

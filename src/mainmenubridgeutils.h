@@ -48,6 +48,7 @@ struct ItemState {
 
     bool has_gradient = false;
     int gradient_points_capable = 0;
+    QVarLengthArray<QColor> gradient_points;
 
     QMap<QString, QString> services; // <rid, rtype>
 

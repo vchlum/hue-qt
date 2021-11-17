@@ -26,37 +26,6 @@
 #include "menuswitch.h"
 #include "menuslider.h"
 
-class MenuButton : public QPushButton
-{
-    Q_OBJECT
-    private:
-        QString identifier;
-        bool has_slider;
-        bool has_switch;
-        QLabel *label;
-        QLabel *icon;
-        MenuSlider *slider;
-        MenuSwitch *button_switch;
-        bool combined_state;
-
-    public slots:
-
-    signals:
-        void buttonRemoved(QString s);
-        void goBack();
-    public:
-        explicit MenuButton(QString item_id, bool use_slider, int points, bool use_back, bool use_switch, QWidget *parent = 0);
-        ~MenuButton() { emit buttonRemoved(id()); }
-        QString id();
-        void setText(QString text);
-        void setIcon(QString icon_name);
-        void setColor(QColor color);
-        void setSwitch(bool on);
-        void setSlider(int value);
-        void setCombined(bool all);
-        bool combined();
-};
-
 class ClickableLabel : public QLabel
 {
     Q_OBJECT
@@ -70,6 +39,39 @@ class ClickableLabel : public QLabel
 
     protected:
         void mousePressEvent(QMouseEvent* event);
+};
+
+class MenuButton : public QPushButton
+{
+    Q_OBJECT
+    private:
+        QString identifier;
+        bool has_slider;
+        bool has_switch;
+        QLabel *label;
+        QLabel *icon;
+        MenuSlider *slider;
+        MenuSwitch *button_switch;
+        bool combined_state;
+        QVarLengthArray<ClickableLabel*> gradient_points;
+
+    public slots:
+
+    signals:
+        void buttonRemoved(QString s);
+        void goBack();
+    public:
+        explicit MenuButton(QString item_id, bool use_slider, int points, bool use_back, bool use_switch, QWidget *parent = 0);
+        ~MenuButton() { emit buttonRemoved(id()); }
+        QString id();
+        void setText(QString text);
+        void setIcon(QString icon_name);
+        void setColor(QColor color);
+        void setColorGradients(QVarLengthArray<QColor> colors);
+        void setSwitch(bool on);
+        void setSlider(int value);
+        void setCombined(bool all);
+        bool combined();
 };
 
 #endif // MENUBUTTON_H

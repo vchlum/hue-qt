@@ -240,6 +240,20 @@ void BridgeWidget::updateButtonState(MenuButton* button, ItemState state)
         button->setColor(off_color);
     }
 
+    if (state.has_gradient && state.gradient_points_capable > 0) {
+        if (!is_on || state.gradient_points.length() == 0) {
+            QVarLengthArray<QColor> gradient_points;
+
+            for (int i = 0; i < state.gradient_points_capable; ++i) {
+                gradient_points.append(off_color);
+            }
+
+            button->setColorGradients(gradient_points);
+        } else {
+            button->setColorGradients(state.gradient_points);
+        }
+    }
+
     if (button->id() == "" || state.type == "")
         throw;
 
@@ -634,8 +648,6 @@ void BridgeWidget::processEvents(QJsonArray &json_array)
     QJsonObject json;
     QString updated;
     QVarLengthArray<QString> updated_list;
-
-    updated_list.resize(json_array.size());
 
     for (int i = 0; i < json_array.size(); ++i) {
         json = json_array[i].toObject();

@@ -18,6 +18,16 @@
 #include <QHBoxLayout>
 
 #include "menubutton.h"
+#include "menuutils.h"
+
+ClickableLabel::ClickableLabel(QWidget* parent, Qt::WindowFlags f) : QLabel(parent)
+{}
+
+ClickableLabel::~ClickableLabel() {}
+
+void ClickableLabel::mousePressEvent(QMouseEvent* event) {
+    emit clicked();
+}
 
 MenuButton::MenuButton(QString item_id, bool use_slider, int points, bool use_back, bool use_switch, QWidget *parent): QPushButton(parent)
 {
@@ -48,8 +58,22 @@ MenuButton::MenuButton(QString item_id, bool use_slider, int points, bool use_ba
         slider_box->addWidget(label);
         slider_box->addWidget(slider);
 
-        for (int i =0; i < points; ++i) {
-            slider_box->addWidget(new MenuSlider(this));
+        if (points > 0) {
+            gradient_points.resize(points);
+
+            auto *gardient_box = new QHBoxLayout();
+
+            for (int i = 0; i < points; ++i) {
+                ClickableLabel *point = new ClickableLabel(this);
+
+                QPixmap pixmap = getColorPixmapFromSVG(":images/HueIcons/uicontrolsColorScenes.svg", QColor("#2E2E2E"));
+
+                point->setPixmap(pixmap.scaled(24, 24, Qt::KeepAspectRatio));
+                gardient_box->addWidget(point);
+                gradient_points[i] = point;
+            }
+
+            slider_box->addLayout(gardient_box);
         }
 
         button_layout->addLayout(slider_box);
@@ -111,6 +135,22 @@ void MenuButton::setColor(QColor color)
     }
 }
 
+void MenuButton::setColorGradients(QVarLengthArray<QColor> colors)
+{
+    if (gradient_points.length() == 0) {
+        return;
+    }
+
+    if (gradient_points.length() != colors.length()) {
+        return;
+    }
+
+    for (int i = 0; i < colors.length(); ++i) {
+        QPixmap pixmap = getColorPixmapFromSVG(":images/HueIcons/uicontrolsColorScenes.svg", colors[i]);
+        gradient_points[i]->setPixmap(pixmap.scaled(24, 24, Qt::KeepAspectRatio));
+    }
+}
+
 void MenuButton::setSwitch(bool on)
 {
     if (!has_switch) {return;}
@@ -131,13 +171,4 @@ void MenuButton::setCombined(bool c)
 bool MenuButton::combined()
 {
     return combined_state;
-}
-
-ClickableLabel::ClickableLabel(QWidget* parent, Qt::WindowFlags f) : QLabel(parent)
-{}
-
-ClickableLabel::~ClickableLabel() {}
-
-void ClickableLabel::mousePressEvent(QMouseEvent* event) {
-    emit clicked();
 }

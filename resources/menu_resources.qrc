@@ -4,5 +4,6 @@
         <file>images/arrowright.svg</file>
 
         <file>images/HueIcons/settingsSoftwareUpdate.svg</file>
+        <file>images/HueIcons/uicontrolsColorScenes.svg</file>
     </qresource>
 </RCC>

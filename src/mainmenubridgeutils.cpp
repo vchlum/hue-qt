@@ -22,42 +22,15 @@ ItemState getLightFromJson(QJsonObject json)
     ItemState state;
     state.id = json["id"].toString();
     state.type = json["type"].toString();
+    double x;
+    double y;
 
     if (json.contains("metadata")) {
         state.name = json["metadata"].toObject()["name"].toString();
         state.archetype = json["metadata"].toObject()["archetype"].toString();
     }
 
-    if (json.contains("on")) {
-        state.has_on = true;
-        state.on = json["on"].toObject()["on"].toBool();
-    }
-
-    if (json.contains("dimming")) {
-        state.has_dimming = true;
-        state.brightness = json["dimming"].toObject()["brightness"].toDouble();
-    }
-
-    if (json.contains("color")) {
-        state.has_color = true;
-        double x = json["color"].toObject()["xy"].toObject()["x"].toDouble();
-        double y = json["color"].toObject()["xy"].toObject()["y"].toDouble();
-        state.color = XYBriToColor(x, y, 255);
-    }
-
-    if (json.contains("color_temperature")) {
-        state.has_color_temperature = true;
-        state.color_temperature = json["color_temperature"].toObject()["mirek"].toDouble();
-        state.color_temperature_minimum = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_minimum"].toDouble();
-        state.color_temperature_maximum = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_maximum"].toDouble();
-    }
-
-    if (json.contains("gradient")) {
-        state.has_gradient = true;
-        state.gradient_points_capable = json["gradient"].toObject()["points_capable"].toDouble();
-    }
-
-    return state;
+    return updateState(state, json);
 }
 
 ItemState getGroupFromJson(QJsonObject json)
@@ -71,16 +44,7 @@ ItemState getGroupFromJson(QJsonObject json)
         state.archetype = json["metadata"].toObject()["archetype"].toString();
     }
 
-    if (json.contains("services")) {
-        QJsonArray services = json["services"].toArray();
-        for (int i = 0; i < services.size(); ++i) {
-            QJsonObject json_service = services[i].toObject();
-
-            state.services[json_service["rid"].toString()] = json_service["rtype"].toString();
-        }
-    }
-
-    return state;
+    return updateState(state, json);
 }
 
 ItemState getSceneFromJson(QJsonObject json)
@@ -93,16 +57,14 @@ ItemState getSceneFromJson(QJsonObject json)
         state.name = json["metadata"].toObject()["name"].toString();
     }
 
-    if (json.contains("group")) {
-        state.group_id = json["group"].toObject()["rid"].toString();
-        state.group_type = json["group"].toObject()["rtype"].toString();
-    }
-
-    return state;
+    return updateState(state, json);
 }
 
 ItemState updateState(ItemState state, QJsonObject json)
 {
+    double x;
+    double y;
+
     if (json.contains("on")) {
         state.has_on = true;
         state.on = json["on"].toObject()["on"].toBool();
@@ -115,8 +77,8 @@ ItemState updateState(ItemState state, QJsonObject json)
 
     if (json.contains("color")) {
         state.has_color = true;
-        double x = json["color"].toObject()["xy"].toObject()["x"].toDouble();
-        double y = json["color"].toObject()["xy"].toObject()["y"].toDouble();
+        x = json["color"].toObject()["xy"].toObject()["x"].toDouble();
+        y = json["color"].toObject()["xy"].toObject()["y"].toDouble();
         state.color = XYBriToColor(x, y, 255);
     }
 
@@ -130,6 +92,34 @@ ItemState updateState(ItemState state, QJsonObject json)
     if (json.contains("gradient")) {
         state.has_gradient = true;
         state.gradient_points_capable = json["gradient"].toObject()["points_capable"].toDouble();
+
+        QJsonArray gradient_points_array = json["gradient"].toObject()["points"].toArray();
+
+        state.gradient_points.clear();
+
+        if (gradient_points_array.size() == state.gradient_points_capable) {
+            for (int i = 0; i < state.gradient_points_capable; ++i) {
+                x = gradient_points_array[i].toObject()["color"].toObject()["xy"].toObject()["x"].toDouble();
+                y = gradient_points_array[i].toObject()["color"].toObject()["xy"].toObject()["y"].toDouble();
+
+                QColor gradient_point = XYBriToColor(x, y, 255);
+                state.gradient_points.append(gradient_point);
+            }
+        }
+    }
+
+    if (json.contains("services")) {
+        QJsonArray services = json["services"].toArray();
+        for (int i = 0; i < services.size(); ++i) {
+            QJsonObject json_service = services[i].toObject();
+
+            state.services[json_service["rid"].toString()] = json_service["rtype"].toString();
+        }
+    }
+
+    if (json.contains("group")) {
+        state.group_id = json["group"].toObject()["rid"].toString();
+        state.group_type = json["group"].toObject()["rtype"].toString();
     }
 
     return state;
