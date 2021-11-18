@@ -54,6 +54,10 @@ MenuButton::MenuButton(QString item_id, bool use_slider, int points, bool use_ba
         auto *slider_box = new QVBoxLayout();
 
         slider = new MenuSlider(this);
+        connect(slider, &MenuSlider::valueChanged, [this](int value){
+            if (!manual_set)
+                emit dimmed(identifier, value);
+        });
 
         slider_box->addWidget(label);
         slider_box->addWidget(slider);
@@ -95,8 +99,10 @@ MenuButton::MenuButton(QString item_id, bool use_slider, int points, bool use_ba
         button_switch = new MenuSwitch(this);
         button_layout->addWidget(button_switch);
         button_layout->setAlignment(button_switch, Qt::AlignRight);
+        connect(button_switch, &MenuSwitch::clicked, [this]() {
+            emit switched(identifier, button_switch->value());
+        });
     }
-
 
     setLayout(button_layout);
     setStyleSheet("QPushButton {border: 10px solid transparent; text-align:left;}");
@@ -154,13 +160,17 @@ void MenuButton::setColorGradients(QVarLengthArray<QColor> colors)
 void MenuButton::setSwitch(bool on)
 {
     if (!has_switch) {return;}
+
     button_switch->setValue(on);
 }
 
 void MenuButton::setSlider(int value)
 {
     if (!has_slider) {return;}
+
+    manual_set = true;
     slider->setValue(value);
+    manual_set = false;
 }
 
 void MenuButton::setCombined(bool c)

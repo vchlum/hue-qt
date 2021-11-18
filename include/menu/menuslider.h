@@ -32,7 +32,6 @@ class MenuSlider : public QSlider
 
 
     private:
-
 };
 
 #endif // MENUSLIDER_H

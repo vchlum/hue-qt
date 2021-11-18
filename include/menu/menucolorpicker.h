@@ -5,6 +5,8 @@
 #include <QVBoxLayout>
 #include <QColor>
 
+//https://gist.github.com/tobi08151405/7b0a8151c9df1a41a87c1559dac1243a
+
 class ColorWheel : public QWidget
 {
     Q_OBJECT

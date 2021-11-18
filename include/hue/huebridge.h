@@ -31,7 +31,8 @@ enum HueBridgeRequestTypes {
     req_create_user,
     req_bridge_status_v1,
     req_bridge_config_v1,
-    req_bridge_status_v2
+    req_bridge_status_v2,
+    req_bridge_put_v2
 };
 
 class HueBridgeDiscovery : public QObject
@@ -71,6 +72,10 @@ class HueBridge : public HueDevice
         void getStatus1();
         void getConfig1();
         void getStatus();
+
+        void putLight(QString id, QJsonObject json);
+        void putGroupedLight(QString id, QJsonObject json);
+        void putScene(QString id, QJsonObject json);
 
     private:
         QString url_api_v1 = "http://%1/api";

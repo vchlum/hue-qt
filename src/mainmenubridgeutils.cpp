@@ -114,6 +114,10 @@ ItemState updateState(ItemState state, QJsonObject json)
             QJsonObject json_service = services[i].toObject();
 
             state.services[json_service["rid"].toString()] = json_service["rtype"].toString();
+
+            if (json_service["rtype"].toString() == "grouped_light") {
+                state.grouped_light_rid = json_service["rid"].toString();
+            }
         }
     }
 
@@ -186,6 +190,13 @@ ItemState combineTwoStates(ItemState base, ItemState joiner)
     }
 
     return state;
+}
+
+void delay(int msec)
+{
+    QTime dieTime = QTime::currentTime().addMSecs(msec);
+    while (QTime::currentTime() < dieTime)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
 
 QColor XYBriToColor(double x, double y, int bri)

@@ -54,12 +54,16 @@ class MenuButton : public QPushButton
         MenuSwitch *button_switch;
         bool combined_state;
         QVarLengthArray<ClickableLabel*> gradient_points;
+        bool manual_set = false;
 
     public slots:
 
     signals:
+        void switched(QString id, bool on);
+        void dimmed(QString id, int value);
         void buttonRemoved(QString s);
         void goBack();
+
     public:
         explicit MenuButton(QString item_id, bool use_slider, int points, bool use_back, bool use_switch, QWidget *parent = 0);
         ~MenuButton() { emit buttonRemoved(id()); }

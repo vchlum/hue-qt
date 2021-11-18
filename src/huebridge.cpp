@@ -268,3 +268,27 @@ void HueBridge::getStatus()
     QString url = url_api_v2.arg(ip());
     sendRequestGET(url, (QNetworkRequest::Attribute) req_bridge_status_v2);
 }
+
+void HueBridge::putLight(QString id, QJsonObject json)
+{
+    QString url = url_api_v2.arg(ip()) + "/light/" + id;
+    QJsonDocument doc(json);
+    QByteArray data = doc.toJson();
+    sendRequestPUT(url, (QNetworkRequest::Attribute) req_bridge_put_v2 , data);
+}
+
+void HueBridge::putGroupedLight(QString id, QJsonObject json)
+{
+    QString url = url_api_v2.arg(ip()) + "/grouped_light/" + id;
+    QJsonDocument doc(json);
+    QByteArray data = doc.toJson();
+    sendRequestPUT(url, (QNetworkRequest::Attribute) req_bridge_put_v2 , data);
+}
+
+void HueBridge::putScene(QString id, QJsonObject json)
+{
+    QString url = url_api_v2.arg(ip()) + "/scene/" + id;
+    QJsonDocument doc(json);
+    QByteArray data = doc.toJson();
+    sendRequestPUT(url, (QNetworkRequest::Attribute) req_bridge_put_v2 , data);
+}

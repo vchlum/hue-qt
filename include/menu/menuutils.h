@@ -17,9 +17,31 @@
 
 #include <QPixmap>
 #include <QColor>
+#include <QThread>
+#include <QTimer>
 
 #ifndef MENUUTILS_H
 #define MENUUTILS_H
+
+class TimerThread : public QThread
+{
+    Q_OBJECT
+    void run() override {
+        msleep(delay);
+        emit timeIsUp();
+    }
+
+    private:
+        int delay = 100;
+
+    public:
+        void setDelay(int d) {
+            delay = d;
+        }
+
+    signals:
+        void timeIsUp();
+};
 
 QPixmap getColorPixmapFromSVG(QString filename, QColor color);
 

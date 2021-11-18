@@ -21,6 +21,8 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QColor>
+#include <QCoreApplication>
+#include <QEventLoop>
 
 #include <menubutton.h>
 
@@ -52,6 +54,8 @@ struct ItemState {
 
     QMap<QString, QString> services; // <rid, rtype>
 
+    QString grouped_light_rid = "";
+
     QString group_id = ""; // scene affiliation
     QString group_type = "";
 
@@ -64,6 +68,8 @@ ItemState getSceneFromJson(QJsonObject json);
 
 ItemState updateState(ItemState state, QJsonObject json);
 ItemState combineTwoStates(ItemState base, ItemState joiner);
+
+void delay(int msec);
 
 /*
  Convert xy and brightness to RGB

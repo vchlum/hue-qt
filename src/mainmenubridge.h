@@ -49,6 +49,8 @@ class BridgeWidget : public QWidget
         QMap<QString, ItemState> states_lights;
         QMap<QString, ItemState> states_scenes;
 
+        QVarLengthArray<QString> events_update_list;
+        bool waiting_events = false;
         QMap<MenuButton*, QString> refresh_button_list;
 
         void addGroupState(QJsonObject json);
@@ -60,6 +62,8 @@ class BridgeWidget : public QWidget
         void updateButtonState(MenuButton* button, ItemState state);
         MenuButton* createMenuButton(MenuExpendable* menu, ItemState state, void (BridgeWidget::*button_slot)() = NULL, bool back_button = false, QString custom_text = "");
 
+        bool checkAnyServiceIsOn(QMapIterator<QString, QString> services, QString type);
+
         ItemState getCombinedGroupState(ItemState base_state);
 
         void setGroups();
@@ -69,16 +73,19 @@ class BridgeWidget : public QWidget
 
         void updateAllButtons();
         QString updateStateByEvent(QJsonObject json);
-        void updateRelatedButtons(QVarLengthArray<QString> updated_list);
 
     private slots:
         void updateBridge(QJsonObject json);
+        void updateRelatedButtons();
         void processEvents(QJsonArray &json_array);
         void autoResize();
         void groupClicked();
         void lightClicked();
         void sceneClicked();
         void removeFromButtonList(QString main_id);
+
+        void switchId(QString id, bool on);
+        void dimmId(QString id, int value);
 
     signals:
         void sizeChanged();

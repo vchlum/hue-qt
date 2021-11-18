@@ -113,5 +113,8 @@ void MenuSwitch::setValue(bool on){
         _switch = on;
         doAnimatedSwitch();
     }
+}
 
+bool MenuSwitch::value(){
+    return _switch;
 }

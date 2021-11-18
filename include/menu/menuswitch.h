@@ -52,6 +52,7 @@ class MenuSwitch : public QAbstractButton
         }
 
         void setValue(bool on);
+        bool value();
 
     protected:
         void paintEvent(QPaintEvent*) override;

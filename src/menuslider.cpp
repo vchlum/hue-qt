@@ -24,7 +24,7 @@ MenuSlider::MenuSlider(QWidget *parent) : QSlider(parent)
     setValue(0);
     setMinimumWidth(200);
     setMaximumWidth(200);
-
+    setTracking(false);
     setColor("#b4b4b4");
 }
 
