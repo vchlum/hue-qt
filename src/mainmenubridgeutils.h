@@ -37,16 +37,20 @@ struct ItemState {
     bool has_on = false;
     bool on = false;
 
+    bool has_all = false;
+    bool all = false;
+
     bool has_dimming = false;
     int brightness = 0;
 
     bool has_color = false;
-    QColor color;
+    QColor color = QColor(255, 255, 255);
 
-    bool has_color_temperature = false;
-    int color_temperature = 0;
-    int color_temperature_minimum = 0;
-    int color_temperature_maximum = 0;
+    bool has_mirek = false;
+    int mirek_temperature = 0;
+    int mirek_min = 0;
+    int mirek_max = 0;
+    QColor mirek_color = QColor(255, 255, 255);
 
     bool has_gradient = false;
     int gradient_points_capable = 0;
@@ -67,6 +71,8 @@ ItemState getGroupFromJson(QJsonObject json);
 ItemState getSceneFromJson(QJsonObject json);
 
 ItemState updateState(ItemState state, QJsonObject json);
+bool colorIsBlack(QColor color);
+QColor combineTwoColors(QColor base, QColor joiner);
 ItemState combineTwoStates(ItemState base, ItemState joiner);
 
 void delay(int msec);
@@ -77,5 +83,21 @@ void delay(int msec);
  https://stackoverflow.com/questions/16052933/convert-philips-hue-xy-values-to-hex
 */
 QColor XYBriToColor(double x, double y, int bri);
+
+/**
+ * Converts RGB to xy values for Philips Hue Lights.
+ * https://stackoverflow.com/questions/22564187/rgb-to-philips-hue-hsb
+ * https://github.com/PhilipsHue/PhilipsHueSDK-iOS-OSX/commit/f41091cf671e13fe8c32fcced12604cd31cceaf3
+ * https://developers.meethue.com/develop/application-design-guidance/color-conversion-formulas-rgb-to-xy-and-back/#Color-rgb-to-xy
+ */
+QVarLengthArray<float> colorToHueXY(QColor color);
+
+/**
+ * Converts kelvin temperature to RGB
+ * https://tannerhelland.com/2012/09/18/convert-temperature-rgb-algorithm-code.html
+ */
+QColor kelvinToColor(int kelvin);
+
+int mirekToKelvin(int mirek);
 
 #endif // MAINMENUBRIDGEUTILS_H

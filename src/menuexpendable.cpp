@@ -117,6 +117,7 @@ void MenuExpendable::adjustContentSize()
     }
 
     auto collapsedHeight = sizeHint().height() - content_area->maximumHeight();
+
     if (toggle_button) {
         collapsedHeight = toggle_button->sizeHint().height();
     }

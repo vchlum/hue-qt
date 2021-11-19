@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <QPalette>
 #include <QLabel>
+#include <QVector2D>
 
 #include "menucolorpicker.h"
 
@@ -14,7 +15,8 @@ ColorWheel::ColorWheel(QWidget *parent): QWidget(parent)
     h = color->hueF();
     s = color->saturationF();
     v = color->valueF();
-
+    x = 0.5;
+    y = 0.5;
     margin = 10;
     radius = 0;
 }
@@ -39,7 +41,6 @@ void ColorWheel::paintEvent(QPaintEvent *e)
     painter.setPen(Qt::transparent);
     painter.setBrush(hsv_grad);
     painter.drawEllipse(rect());
-
     painter.setBrush(val_grad);
     painter.drawEllipse(rect());
 }
@@ -49,14 +50,34 @@ void ColorWheel::resizeEvent(QResizeEvent *e)
     radius = qMin(width() / 2, height() / 2);
 }
 
-
 QSize ColorWheel::sizeHint() const {
     return QSize(width(), height());
+}
+
+QColor ColorWheel::mapColor(int _x, int _y)
+{
+    h = (qAtan2(_x - radius, _y - radius) + M_PI)/(2.0 * M_PI);
+    s = qSqrt(qPow(_x - radius, 2.0) + qPow(_y - radius, 2.0)) / radius;
+
+    if (s > 1.0)
+        s = 1.0;
+
+    return QColor::fromHsvF(h, s, v);
+}
+
+void ColorWheel::mousePressEvent(QMouseEvent *e)
+{
+    emit colorPicked(mapColor(e->position().x(), e->position().y()));
+
+    QWidget::mousePressEvent(e);
 }
 
 TemperatureBox::TemperatureBox(QWidget *parent): QWidget(parent)
 {
     color = new QColor(255, 255, 255, 1);
+    mirek_maximum = 500;
+    mirek_minimum = 153;
+    mirek_size = mirek_maximum - mirek_minimum;
     h = color->hueF();
     s = color->saturationF();
     v = color->valueF();
@@ -72,22 +93,17 @@ void TemperatureBox::paintEvent(QPaintEvent *e)
 
     painter.setViewport(margin, margin, width() - 2 * margin, height() - 2 * margin);
 
-    QConicalGradient hsv_grad = QConicalGradient(center, 90);
-    for (int i = 0; i < 360; ++i) {
-        QColor col = QColor::fromHsvF(i / 360.0, 1, v);
-        hsv_grad.setColorAt(i / 360.0, col);
-    }
+    QLinearGradient hsv_grad = QLinearGradient(0,0, width(), height());
 
-    QRadialGradient val_grad = QRadialGradient(center, radius);
-    val_grad.setColorAt(0.0, QColor::fromHsvF(0.0, 0.0, v, 1.0));
-    val_grad.setColorAt(1.0, Qt::transparent);
+    QGradientStops stops;
+    stops << QGradientStop(0.0, QColor::fromRgb(255,147,44));
+    stops << QGradientStop(1.0, QColor::fromRgb(211,224,255));
+
+    hsv_grad.setStops(stops);
 
     painter.setPen(Qt::transparent);
     painter.setBrush(hsv_grad);
     painter.drawRoundedRect(rect(), 0.5, 0.5);
-
-    //painter.setBrush(val_grad);
-    //painter.drawRoundedRect(rect());
 }
 
 void TemperatureBox::resizeEvent(QResizeEvent *e)
@@ -95,35 +111,58 @@ void TemperatureBox::resizeEvent(QResizeEvent *e)
     radius = qMin(width() / 2, height() / 2);
 }
 
-
 QSize TemperatureBox::sizeHint() const {
     return QSize(width(), height());
 }
 
-ColorPicker::ColorPicker(QWidget *parent): QWidget(parent)
+void TemperatureBox::mousePressEvent(QMouseEvent *e)
+{
+    int mirek = mirek_maximum - e->position().x() * mirek_size / (width() - margin);
+    emit mirekPicked(mirek);
+
+    QWidget::mousePressEvent(e);
+}
+
+ColorPicker::ColorPicker(QString id, bool use_color, bool use_temperature, QWidget *parent): QWidget(parent)
 {
     int tmp_size = 250;
+    identifier = id;
     main_layout = new QVBoxLayout(this);
 
+    main_layout->setSpacing(0);
     main_layout->setContentsMargins(0, 0, 0, 0);
 
-    ColorWheel* color_wheel = new ColorWheel(this);
+    main_layout->setAlignment(Qt::AlignCenter);
 
-    color_wheel->setMinimumHeight(tmp_size);
-    color_wheel->setMinimumWidth(tmp_size);
-    color_wheel->setMaximumHeight(tmp_size);
-    color_wheel->setMaximumWidth(tmp_size);
+    if (use_color) {
+        ColorWheel* color_wheel = new ColorWheel(this);
 
-    main_layout->addWidget(color_wheel);
+        color_wheel->setMinimumHeight(tmp_size);
+        color_wheel->setMinimumWidth(tmp_size);
+        color_wheel->setMaximumHeight(tmp_size);
+        color_wheel->setMaximumWidth(tmp_size);
 
-    TemperatureBox* temperature_box = new TemperatureBox(this);
+        connect(color_wheel, &ColorWheel::colorPicked, [this] (QColor color) {
+            emit colorPicked(identifier, color);
+        });
 
-    temperature_box->setMinimumHeight(tmp_size / 4.5);
-    temperature_box->setMinimumWidth(tmp_size);
-    temperature_box->setMaximumHeight(tmp_size / 4.5);
-    temperature_box->setMaximumWidth(tmp_size);
+        main_layout->addWidget(color_wheel);
+    }
 
-    main_layout->addWidget(temperature_box);
+    if (use_temperature) {
+        TemperatureBox* temperature_box = new TemperatureBox(this);
+
+        temperature_box->setMinimumHeight(tmp_size / 4.5);
+        temperature_box->setMinimumWidth(tmp_size);
+        temperature_box->setMaximumHeight(tmp_size / 4.5);
+        temperature_box->setMaximumWidth(tmp_size);
+
+        connect(temperature_box, &TemperatureBox::mirekPicked, [this] (int mirek) {
+            emit mirekPicked(identifier, mirek);
+        });
+
+        main_layout->addWidget(temperature_box);
+    }
 }
 
 QSize ColorPicker::sizeHint() const {

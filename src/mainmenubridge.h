@@ -63,6 +63,7 @@ class BridgeWidget : public QWidget
         MenuButton* createMenuButton(MenuExpendable* menu, ItemState state, void (BridgeWidget::*button_slot)() = NULL, bool back_button = false, QString custom_text = "");
 
         bool checkAnyServiceIsOn(QMapIterator<QString, QString> services, QString type);
+        bool checkAllServicesAreOn(QMapIterator<QString, QString> services, QString type);
 
         ItemState getCombinedGroupState(ItemState base_state);
 
@@ -86,6 +87,8 @@ class BridgeWidget : public QWidget
 
         void switchId(QString id, bool on);
         void dimmId(QString id, int value);
+        void changeColor(QString id, QColor color);
+        void changeMirek(QString id, int mirek);
 
     signals:
         void sizeChanged();

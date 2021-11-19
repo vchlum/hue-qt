@@ -15,20 +15,25 @@ class ColorWheel : public QWidget
         QSize sizeHint() const override;
 
     signals:
+        void colorPicked(QColor color);
 
     public slots:
 
     protected:
         void paintEvent(QPaintEvent *e);
         void resizeEvent(QResizeEvent *e);
+        void mousePressEvent(QMouseEvent *e);
 
     private:
         QColor* color;
         int margin;
-        int h;
-        int s;
-        int v;
-        int radius;
+        double h;
+        double s;
+        double v;
+        double x;
+        double y;
+        double radius;
+        QColor mapColor(int _x, int _y);
 
     private slots:
 };
@@ -41,6 +46,7 @@ class TemperatureBox : public QWidget
         QSize sizeHint() const override;
 
     signals:
+        void mirekPicked(int mirek);
 
     public slots:
 
@@ -48,14 +54,18 @@ class TemperatureBox : public QWidget
     protected:
         void paintEvent(QPaintEvent *e);
         void resizeEvent(QResizeEvent *e);
+        void mousePressEvent(QMouseEvent *e);
 
     private:
         QColor* color;
+        int mirek_maximum;
+        int mirek_minimum;
+        int mirek_size;
         int margin;
-        int h;
-        int s;
-        int v;
-        int radius;
+        double h;
+        double s;
+        double v;
+        double radius;
 
     private slots:
 };
@@ -64,16 +74,19 @@ class ColorPicker : public QWidget
 {
     Q_OBJECT
     public:
-        explicit ColorPicker(QWidget *parent = 0);
+        explicit ColorPicker(QString id = "", bool use_color = false, bool use_temperature = false, QWidget *parent = 0);
         QSize sizeHint() const override;
 
     signals:
+        void colorPicked(QString id, QColor color);
+        void mirekPicked(QString id, int mirek);
 
     public slots:
 
     protected:
 
     private:
+        QString identifier;
         QVBoxLayout* main_layout;
 
     private slots:

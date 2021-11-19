@@ -18,7 +18,6 @@
 #include <QApplication>
 
 #include "mainmenu.h"
-#include <menucolorpicker.h>
 
 using namespace std;
 

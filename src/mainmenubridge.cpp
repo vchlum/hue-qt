@@ -163,6 +163,75 @@ void BridgeWidget::dimmId(QString id, int value)
     }
 }
 
+void BridgeWidget::changeColor(QString id, QColor color)
+{
+    QJsonObject json;
+    QVarLengthArray<float> xy = colorToHueXY(color);
+
+    QJsonObject json_on;
+    json_on["on"] = true;
+    json["on"] = json_on;
+
+    QJsonObject json_xy;
+    json_xy["x"] = xy[0];
+    json_xy["y"] = xy[1];
+
+    QJsonObject json_color;
+    json_color["xy"] = json_xy;
+    json["color"] = json_color;
+
+    if (states_groups.contains(id)) {
+        bool any_on = checkAnyServiceIsOn(states_groups[id].services, "light");
+
+        QMapIterator<QString, QString> service(states_groups[id].services);
+        while (service.hasNext()) {
+            service.next();
+
+            if (service.value() == "light" && (states_lights[service.key()].on || !any_on)) {
+                delay(100);
+                bridge->putLight(service.key(), json);
+            }
+        }
+
+        // the bridge does not allow to change the brightness of group yet
+        // bridge->putGroupedLight(states_groups[id].grouped_light_rid, json);
+    } else {
+        bridge->putLight(id, json);
+    }
+}
+
+void BridgeWidget::changeMirek(QString id, int mirek)
+{
+    QJsonObject json;
+
+    QJsonObject json_on;
+    json_on["on"] = true;
+    json["on"] = json_on;
+
+    QJsonObject json_mirek;
+    json_mirek["mirek"] = mirek;
+    json["color_temperature"] = json_mirek;
+
+    if (states_groups.contains(id)) {
+        bool any_on = checkAnyServiceIsOn(states_groups[id].services, "light");
+
+        QMapIterator<QString, QString> service(states_groups[id].services);
+        while (service.hasNext()) {
+            service.next();
+
+            if (service.value() == "light" && (states_lights[service.key()].on || !any_on)) {
+                delay(100);
+                bridge->putLight(service.key(), json);
+            }
+        }
+
+        // the bridge does not allow to change the brightness of group yet
+        // bridge->putGroupedLight(states_groups[id].grouped_light_rid, json);
+    } else {
+        bridge->putLight(id, json);
+    }
+}
+
 void BridgeWidget::addGroupState(QJsonObject json)
 {
     QString id;
@@ -292,6 +361,12 @@ void BridgeWidget::updateButtonState(MenuButton* button, ItemState state)
         } else {
             button->setColor(off_color);
         }
+    } else if (state.has_mirek) {
+        if (is_on) {
+            button->setColor(state.mirek_color);
+        } else {
+            button->setColor(off_color);
+        }
     } else {
         button->setColor(off_color);
     }
@@ -374,6 +449,28 @@ bool BridgeWidget::checkAnyServiceIsOn(QMapIterator<QString, QString> services, 
     }
 
     return false;
+}
+
+bool BridgeWidget::checkAllServicesAreOn(QMapIterator<QString, QString> services, QString type)
+{
+    QString id;
+
+    QMapIterator<QString, QString> service(services);
+    while (service.hasNext()) {
+        service.next();
+
+        id = service.key();
+
+        if (service.value() != type) {
+            continue;
+        }
+
+        if (states_lights[id].has_on && !states_lights[id].on) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 ItemState BridgeWidget::getCombinedGroupState(ItemState base_state)
@@ -549,7 +646,23 @@ void BridgeWidget::setColorsTemperature(QString light_id, QString group_id)
 
     state = light_id == "" ? states_groups[id] : states_lights[id] ;
 
-    button = createMenuButton(colors, state, NULL, light_selected, button_text);
+    if (light_id == "") {
+        state = getCombinedGroupState(state);
+        state.has_all = true;
+        state.all = checkAnyServiceIsOn(state.services, "light");
+    }
+
+    ItemState tmp_state = state;
+    tmp_state.has_on = false;
+    tmp_state.has_dimming = false;
+    tmp_state.has_color = false;
+
+    button = createMenuButton(colors, tmp_state, NULL, light_selected, button_text);
+
+    if (light_id == "") {
+        button->setCombined(true);
+    }
+
     colors->setHeadMenuButton(*button);
 
     connect(button, &MenuButton::clicked, [this]() {
@@ -583,7 +696,9 @@ void BridgeWidget::setColorsTemperature(QString light_id, QString group_id)
         });
     }
 
-    ColorPicker *color_picker = new ColorPicker();
+    ColorPicker *color_picker = new ColorPicker(id, state.has_color, state.has_mirek, this);
+    connect(color_picker, SIGNAL(colorPicked(QString, QColor)), this, SLOT(changeColor(QString, QColor)));
+    connect(color_picker, SIGNAL(mirekPicked(QString, int)), this, SLOT(changeMirek(QString, int)));
     colors->setContentWidget(*color_picker);
 }
 

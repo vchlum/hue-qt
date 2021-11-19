@@ -72,7 +72,7 @@ MenuButton::MenuButton(QString item_id, bool use_slider, int points, bool use_ba
 
                 QPixmap pixmap = getColorPixmapFromSVG(":images/HueIcons/uicontrolsColorScenes.svg", QColor("#2E2E2E"));
 
-                point->setPixmap(pixmap.scaled(24, 24, Qt::KeepAspectRatio));
+                point->setPixmap(pixmap.scaled(points_icon_size, points_icon_size, Qt::KeepAspectRatio));
                 gardient_box->addWidget(point);
                 gradient_points[i] = point;
             }
@@ -105,11 +105,27 @@ MenuButton::MenuButton(QString item_id, bool use_slider, int points, bool use_ba
     }
 
     setLayout(button_layout);
-    setStyleSheet("QPushButton {border: 10px solid transparent; text-align:left;}");
+    setStyleSheet(QString("QPushButton {border: %1px solid transparent; text-align:left;}").arg(my_border));
     setMinimumWidth(button_layout->sizeHint().width());
     setMinimumHeight(button_layout->sizeHint().height());
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
     adjustSize();
+}
+
+QSize MenuButton::sizeHint() const {
+    int my_width;
+    int my_height;
+
+    my_height = label->sizeHint().height() + 2 * my_border;
+    if (has_slider)
+        my_height += slider->sizeHint().height();
+
+    if (gradient_points.size() > 0)
+        my_height += points_icon_size;
+    my_width = width();
+
+
+    return QSize(my_width, my_height);
 }
 
 QString MenuButton::id()

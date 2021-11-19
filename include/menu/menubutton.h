@@ -55,6 +55,8 @@ class MenuButton : public QPushButton
         bool combined_state;
         QVarLengthArray<ClickableLabel*> gradient_points;
         bool manual_set = false;
+        int my_border = 5;
+        int points_icon_size = 24;
 
     public slots:
 
@@ -67,6 +69,7 @@ class MenuButton : public QPushButton
     public:
         explicit MenuButton(QString item_id, bool use_slider, int points, bool use_back, bool use_switch, QWidget *parent = 0);
         ~MenuButton() { emit buttonRemoved(id()); }
+        QSize sizeHint() const override;
         QString id();
         void setText(QString text);
         void setIcon(QString icon_name);

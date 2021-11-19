@@ -83,10 +83,13 @@ ItemState updateState(ItemState state, QJsonObject json)
     }
 
     if (json.contains("color_temperature")) {
-        state.has_color_temperature = true;
-        state.color_temperature = json["color_temperature"].toObject()["mirek"].toDouble();
-        state.color_temperature_minimum = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_minimum"].toDouble();
-        state.color_temperature_maximum = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_maximum"].toDouble();
+        state.has_mirek = true;
+        state.mirek_temperature = json["color_temperature"].toObject()["mirek"].toDouble();
+        state.mirek_min = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_minimum"].toDouble();
+        state.mirek_max = json["color_temperature"].toObject()["mirek_schema"].toObject()["mirek_maximum"].toDouble();
+        int kelvin = mirekToKelvin(state.mirek_temperature);
+        QColor kelvin_color = kelvinToColor(kelvin);
+        state.mirek_color = kelvin_color;
     }
 
     if (json.contains("gradient")) {
@@ -129,6 +132,27 @@ ItemState updateState(ItemState state, QJsonObject json)
     return state;
 }
 
+bool colorIsBlack(QColor color)
+{
+    if (color.red() == 255 && color.green() == 255 && color.blue() == 255) {
+        return true;
+    }
+
+    return false;
+}
+
+QColor combineTwoColors(QColor base, QColor joiner)
+{
+    double red  = (base.red() + joiner.red()) / 2.0;
+    double green  = (base.green() + joiner.green()) / 2.0;
+    double blue  = (base.blue() + joiner.blue()) / 2.0;
+    double alpha  = (base.alpha() + joiner.alpha()) / 2.0;
+
+    return QColor::fromRgb(red, green, blue, alpha);
+}
+
+
+// my wish is this function would work forever and nobody will need to read it, sorry:-)
 ItemState combineTwoStates(ItemState base, ItemState joiner)
 {
     ItemState state;
@@ -146,47 +170,73 @@ ItemState combineTwoStates(ItemState base, ItemState joiner)
     }
 
     state.has_dimming = base.has_dimming || joiner.has_dimming;
-    if ((base.on && joiner.on) && base.has_dimming && joiner.has_dimming) {
+    if ((base.on && joiner.on) && base.has_dimming && joiner.has_dimming && base.brightness != 0 && joiner.brightness != 0) {
         state.brightness = (base.brightness + joiner.brightness) / 2.0;
-    } else if (base.on && base.has_dimming) {
+    } else if (base.on && base.has_dimming && base.brightness != 0) {
         state.brightness = base.brightness;
-    } else if (joiner.on && joiner.has_dimming) {
+    } else if (joiner.on && joiner.has_dimming && joiner.brightness != 0) {
         state.brightness = joiner.brightness;
     }
 
     state.has_color = base.has_color || joiner.has_color;
-    if ((base.on && joiner.on) && base.has_color && joiner.has_color) {
-        double red  = (base.color.red() + joiner.color.red()) / 2.0;
-        double green  = (base.color.green() + joiner.color.green()) / 2.0;
-        double blue  = (base.color.blue() + joiner.color.blue()) / 2.0;
-        double alpha  = (base.color.alpha() + joiner.color.alpha()) / 2.0;
+    if ((base.on && joiner.on) && base.has_color && joiner.has_color && !colorIsBlack(base.color) && !colorIsBlack(joiner.color)) {
 
-        state.color = QColor::fromRgb(red, green, blue, alpha);
+        state.color = combineTwoColors(base.color, joiner.color);
 
-    } else if (base.on && base.has_color) {
+    } else if (base.on && base.has_color && !colorIsBlack(base.color)) {
         state.color = base.color;
-    } else if (joiner.on && joiner.has_color) {
+    } else if (joiner.on && joiner.has_color && !colorIsBlack(joiner.color)) {
         state.color = joiner.color;
     }
 
-    state.has_color_temperature = base.has_color_temperature || joiner.has_color_temperature;
-    if ((base.on && joiner.on) && base.has_color_temperature && joiner.has_color_temperature) {
-        if (base.color_temperature != 0 && joiner.color_temperature != 0) {
-            state.color_temperature = (base.color_temperature + joiner.color_temperature) / 2.0;
-        } else if (base.color_temperature != 0) {
-            state.color_temperature = base.color_temperature;
-        } else if (joiner.color_temperature != 0) {
-            state.color_temperature = joiner.color_temperature;
+    state.has_mirek = base.has_mirek || joiner.has_mirek;
+    if ((base.on && joiner.on) && base.has_mirek && joiner.has_mirek) {
+        if (base.mirek_temperature != 0 && joiner.mirek_temperature != 0) {
+            state.mirek_temperature = (base.mirek_temperature + joiner.mirek_temperature) / 2.0;
+        } else if (base.mirek_temperature != 0) {
+            state.mirek_temperature = base.mirek_temperature;
+        } else if (joiner.mirek_temperature != 0) {
+            state.mirek_temperature = joiner.mirek_temperature;
         }
 
-        state.color_temperature_minimum = qMin(base.color_temperature_minimum, joiner.color_temperature_minimum);
-        state.color_temperature_maximum = qMax(base.color_temperature_maximum, joiner.color_temperature_maximum);
-    } else if (base.on && base.has_color_temperature) {
-        state.color_temperature_minimum = base.color_temperature_minimum;
-        state.color_temperature_maximum = base.color_temperature_maximum;
-    } else if (joiner.on && joiner.has_color_temperature) {
-        state.color_temperature_minimum = joiner.color_temperature_minimum;
-        state.color_temperature_maximum = joiner.color_temperature_maximum;
+        state.mirek_min = qMin(base.mirek_min, joiner.mirek_min);
+        state.mirek_max = qMax(base.mirek_max, joiner.mirek_max);
+    } else if (base.on && base.has_mirek) {
+        state.mirek_min = base.mirek_min;
+        state.mirek_max = base.mirek_max;
+    } else if (joiner.on && joiner.has_mirek) {
+        state.mirek_min = joiner.mirek_min;
+        state.mirek_max = joiner.mirek_max;
+    }
+
+    // we need to combine mirek color and ordinary color
+    if (! base.has_color && ! joiner.has_color && joiner.has_color && !colorIsBlack(base.color) && !colorIsBlack(joiner.color)) {
+        if (base.on && base.has_mirek && joiner.on && joiner.has_mirek) {
+            state.color = combineTwoColors(base.mirek_color, joiner.mirek_color);
+            state.has_color = true;
+        } else if (base.on && base.has_mirek && (!joiner.has_mirek || !joiner.on) && !colorIsBlack(base.color)) {
+            state.color = base.mirek_color;
+            state.has_color = true;
+        } else if ((!base.has_mirek || !base.on)&& joiner.on && joiner.has_mirek && !colorIsBlack(joiner.color)) {
+            state.color = joiner.mirek_color;
+            state.has_color = true;
+        }
+    }
+    if (base.on && base.has_color && joiner.on && ! joiner.has_color && joiner.has_mirek && !colorIsBlack(base.color) && !colorIsBlack(joiner.mirek_color)) {
+        state.color = combineTwoColors(base.color, joiner.mirek_color);
+        state.has_color = true;
+    }
+    if (joiner.on && joiner.has_color && base.on && ! base.has_color && base.has_mirek && !colorIsBlack(base.mirek_color) && !colorIsBlack(joiner.color)) {
+        state.color = combineTwoColors(joiner.color, base.mirek_color);
+        state.has_color = true;
+    }
+    if (base.on && !joiner.on && base.has_mirek && ! base.has_color && !colorIsBlack(base.mirek_color)) {
+        state.color = base.mirek_color;
+        state.has_color = true;
+    }
+    if (joiner.on && !base.on && joiner.has_mirek && ! joiner.has_color && !colorIsBlack(joiner.mirek_color)) {
+        state.color = joiner.mirek_color;
+        state.has_color = true;
     }
 
     return state;
@@ -234,4 +284,128 @@ QColor XYBriToColor(double x, double y, int bri)
     b = qRound(b);
 
     return QColor::fromRgb(r, g, b, 255);
+}
+
+QVarLengthArray<float> colorToHueXY(QColor color)
+{
+    QVarLengthArray<float> normalizedToOne;
+    float red;
+    float green;
+    float blue;
+
+    normalizedToOne.append(color.red() / 255.0);
+    normalizedToOne.append(color.green() / 255.0);
+    normalizedToOne.append(color.blue() / 255.0);
+
+    // Make red more vivid
+    if (normalizedToOne[0] > 0.04045) {
+        red = qPow((normalizedToOne[0] + 0.055) / (1.0 + 0.055), 2.4);
+    } else {
+        red = (normalizedToOne[0] / 12.92);
+    }
+
+    // Make green more vivid
+    if (normalizedToOne[1] > 0.04045) {
+        green = qPow((normalizedToOne[1] + 0.055) / (1.0 + 0.055), 2.4);
+    } else {
+        green = (normalizedToOne[1] / 12.92);
+    }
+
+    // Make blue more vivid
+    if (normalizedToOne[2] > 0.04045) {
+        blue = qPow((normalizedToOne[2] + 0.055) / (1.0 + 0.055), 2.4);
+    } else {
+        blue = (normalizedToOne[2] / 12.92);
+    }
+
+    float X = (red * 0.649926 + green * 0.103455 + blue * 0.197109);
+    float Y = (red * 0.234327 + green * 0.743075 + blue * 0.022598);
+    float Z = (red * 0.0000000 + green * 0.053077 + blue * 1.035763);
+
+    float x = X / (X + Y + Z);
+    float y = Y / (X + Y + Z);
+
+    QVarLengthArray<float> ret;
+
+    ret.append(x);
+    ret.append(y);
+
+    return ret;
+}
+
+QColor kelvinToColor(int kelvin)
+{
+    float tmpCalc = 0;
+    float tmpKelvin = kelvin;
+    float red = 0;
+    float green = 0;
+    float blue = 0;
+
+    if (tmpKelvin < 1000) {
+        tmpKelvin = 1000;
+    }
+
+    if (tmpKelvin > 40000) {
+        tmpKelvin = 40000;
+    }
+
+    tmpKelvin = tmpKelvin / 100.0;
+
+    if (tmpKelvin <= 66) {
+        red = 255;
+    } else {
+        tmpCalc = tmpKelvin - 60;
+        tmpCalc = 329.698727446 * qPow(tmpCalc, -0.1332047592);
+
+        red = tmpCalc;
+        if (red < 0) {red = 0;}
+        if (red > 255) {red = 255;}
+    }
+
+    if (tmpKelvin <= 66) {
+        tmpCalc = tmpKelvin;
+        tmpCalc = 99.4708025861 * qLn(tmpCalc) - 161.1195681661;
+
+        green = tmpCalc;
+        if (green < 0) {green = 0;}
+        if (green > 255) {green = 255;}
+    } else {
+        tmpCalc = tmpKelvin - 60;
+        tmpCalc = 288.1221695283 * qPow(tmpCalc, -0.0755148492);
+
+        green = tmpCalc;
+        if (green < 0) {green = 0;}
+        if (green > 255) {green = 255;}
+    }
+
+    if (tmpKelvin >= 66) {
+        blue = 255;
+    } else if (tmpKelvin <=19) {
+        blue = 0;
+    } else {
+        tmpCalc = tmpKelvin - 10;
+        tmpCalc = 138.5177312231 * qLn(tmpCalc) - 305.0447927307;
+
+        blue = tmpCalc;
+        if (blue < 0) {blue = 0;}
+        if (blue > 255) {blue = 255;}
+    }
+
+    return QColor(red, green, blue);
+}
+
+int mirekToKelvin(int mirek)
+{
+    //the warmest color 2000K is 500 mirek
+    //the coldest color 6500K is 153 mirek.
+
+    if (mirek < 153)
+        mirek = 153;
+
+    if (mirek > 500)
+        mirek = 500;
+
+    int kelvin;
+    kelvin = 6500.0 - ((4500.0 / 347.0) * (mirek - 153));
+    return kelvin;
 }
