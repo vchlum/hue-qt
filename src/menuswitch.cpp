@@ -111,6 +111,12 @@ void MenuSwitch::setColor(QColor color)
 void MenuSwitch::setValue(bool on){
     if (on != _switch) {
         _switch = on;
+
+        if (!_switch) {
+            _thumb = QBrush("#d5d5d5");
+            repaint();
+        }
+
         doAnimatedSwitch();
     }
 }

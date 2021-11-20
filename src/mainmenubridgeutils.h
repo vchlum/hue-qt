@@ -37,9 +37,6 @@ struct ItemState {
     bool has_on = false;
     bool on = false;
 
-    bool has_all = false;
-    bool all = false;
-
     bool has_dimming = false;
     int brightness = 0;
 

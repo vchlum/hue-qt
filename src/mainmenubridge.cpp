@@ -93,12 +93,6 @@ void BridgeWidget::sceneClicked()
 {
     MenuButton *btn = qobject_cast<MenuButton *>(sender());
     selected_light = btn->id();
-/*
-    groups->toggle(false);
-    lights->toggle(false);
-    colors->toggle(false);
-    scenes->toggle(true);
-*/
 
     QJsonObject json;
 
@@ -161,6 +155,59 @@ void BridgeWidget::dimmId(QString id, int value)
     } else {
         bridge->putLight(id, json);
     }
+}
+
+void BridgeWidget::changeColorGradient(QString id, QColor color)
+{
+    QJsonObject json;
+    int gradient_point;
+    ItemState state;
+
+    state = states_lights[id];
+
+    if (!state.has_gradient) {
+        return;
+    }
+
+    QVarLengthArray<float> xy = colorToHueXY(color);
+
+    ColorPicker *cpck = qobject_cast<ColorPicker *>(sender());
+
+    gradient_point = cpck->property("gradient_point").toInt();
+
+    QJsonObject json_on;
+    json_on["on"] = true;
+    json["on"] = json_on;
+
+    QJsonObject json_gradient;
+    QJsonArray points_array;
+    for (int i = 0; i < state.gradient_points_capable; ++i) {
+        QVarLengthArray<float> tmp_xy;
+
+        if (gradient_point == i) {
+            tmp_xy = xy;
+        } else if (state.gradient_points.length() != state.gradient_points_capable) {
+            tmp_xy = xy;
+        } else {
+            tmp_xy = colorToHueXY(state.gradient_points[i]);
+        }
+
+        QJsonObject json_xy;
+        json_xy["x"] = tmp_xy[0];
+        json_xy["y"] = tmp_xy[1];
+
+        QJsonObject json_color_xy;
+        json_color_xy["xy"] = json_xy;
+
+        QJsonObject json_color;
+        json_color["color"] = json_color_xy;
+
+        points_array.append(json_color);
+    }
+    json_gradient["points"] = points_array;
+    json["gradient"] = json_gradient;
+
+    bridge->putLight(id, json);
 }
 
 void BridgeWidget::changeColor(QString id, QColor color)
@@ -230,6 +277,17 @@ void BridgeWidget::changeMirek(QString id, int mirek)
     } else {
         bridge->putLight(id, json);
     }
+}
+
+void BridgeWidget::gradientSelected(QString id, int point)
+{
+    selected_light = id;
+    setColorsTemperature(selected_light, selected_group, point);
+
+    groups->toggle(false);
+    lights->toggle(false);
+    colors->toggle(true);
+    scenes->toggle(false);
 }
 
 void BridgeWidget::addGroupState(QJsonObject json)
@@ -341,7 +399,13 @@ void BridgeWidget::updateButtonState(MenuButton* button, ItemState state)
     }
 
     bool is_on = false;
-    if (state.has_on) {
+    bool is_all_on = false;
+
+    if (state.has_on && button->combinedAll()) {
+        is_all_on = checkAllServicesAreOn(state.services, "light");
+        button->setSwitch(is_all_on);
+        is_on = state.on;
+    } else if (state.has_on) {
         is_on = state.on;
         button->setSwitch(is_on);
     }
@@ -379,9 +443,9 @@ void BridgeWidget::updateButtonState(MenuButton* button, ItemState state)
                 gradient_points.append(off_color);
             }
 
-            button->setColorGradients(gradient_points);
+            button->setColorsPoints(gradient_points);
         } else {
-            button->setColorGradients(state.gradient_points);
+            button->setColorsPoints(state.gradient_points);
         }
     }
 
@@ -391,7 +455,14 @@ void BridgeWidget::updateButtonState(MenuButton* button, ItemState state)
     refresh_button_list[button] = state.type;
 }
 
-MenuButton* BridgeWidget::createMenuButton(MenuExpendable* menu, ItemState state, void (BridgeWidget::*button_slot)(), bool back_button, QString custom_text)
+MenuButton* BridgeWidget::createMenuButton(
+    MenuExpendable* menu,
+    ItemState state,
+    void (BridgeWidget::*button_slot)(),
+    bool back_button,
+    QString custom_text,
+    bool combined,
+    bool combined_all)
 {
     QString id;
     MenuButton* button;
@@ -423,6 +494,12 @@ MenuButton* BridgeWidget::createMenuButton(MenuExpendable* menu, ItemState state
     if (state.has_dimming) {
         connect(button, SIGNAL(dimmed(QString, int)), this, SLOT(dimmId(QString, int)));
     }
+
+    if (state.gradient_points_capable > 0) {
+        connect(button, SIGNAL(pointed(QString, int)), this, SLOT(gradientSelected(QString, int)));
+    }
+
+    button->setCombined(combined, combined_all);
 
     updateButtonState(button, state);
 
@@ -510,8 +587,7 @@ void BridgeWidget::setGroups()
     id = bridge_home_id;
     state = states_groups[id];
     state = getCombinedGroupState(state);
-    button = createMenuButton(groups, state, NULL, false, bridge->deviceName());
-    button->setCombined(true);
+    button = createMenuButton(groups, state, NULL, false, bridge->deviceName(), true);
     groups->setHeadMenuButton(*button);
 
     connect(button, &MenuButton::clicked, [this]() {
@@ -532,8 +608,7 @@ void BridgeWidget::setGroups()
         }
 
         state = getCombinedGroupState(state);
-        button = createMenuButton(groups, state, &BridgeWidget::groupClicked, false);
-        button->setCombined(true);
+        button = createMenuButton(groups, state, &BridgeWidget::groupClicked, false, "", true);
         groups->addContentMenuButton(*button);
 
         counter++;
@@ -567,8 +642,7 @@ void BridgeWidget::setLights(QString group_id)
 
     state = states_groups[group_id];
     state = getCombinedGroupState(state);
-    button = createMenuButton(lights, state, NULL, group_selected, button_text);
-    button->setCombined(true);
+    button = createMenuButton(lights, state, NULL, group_selected, button_text, true);
     lights->setHeadMenuButton(*button);
 
     connect(button, &MenuButton::clicked, [this]() {
@@ -625,7 +699,7 @@ void BridgeWidget::setLights(QString group_id)
     }
 }
 
-void BridgeWidget::setColorsTemperature(QString light_id, QString group_id)
+void BridgeWidget::setColorsTemperature(QString light_id, QString group_id, int gradient_point)
 {
     QString id;
     MenuButton* button;
@@ -648,19 +722,16 @@ void BridgeWidget::setColorsTemperature(QString light_id, QString group_id)
 
     if (light_id == "") {
         state = getCombinedGroupState(state);
-        state.has_all = true;
-        state.all = checkAnyServiceIsOn(state.services, "light");
     }
 
-    ItemState tmp_state = state;
-    tmp_state.has_on = false;
-    tmp_state.has_dimming = false;
-    tmp_state.has_color = false;
-
-    button = createMenuButton(colors, tmp_state, NULL, light_selected, button_text);
+    if (light_id != "" && gradient_point > -1) {
+        button_text = QString("%1 - %2 %3").arg(state.name).arg(tr("segment")).arg(gradient_point + 1);
+    }
 
     if (light_id == "") {
-        button->setCombined(true);
+        button = createMenuButton(colors, state, NULL, light_selected, button_text, true, true);
+    } else {
+        button = createMenuButton(colors, state, NULL, light_selected, button_text);
     }
 
     colors->setHeadMenuButton(*button);
@@ -696,9 +767,19 @@ void BridgeWidget::setColorsTemperature(QString light_id, QString group_id)
         });
     }
 
-    ColorPicker *color_picker = new ColorPicker(id, state.has_color, state.has_mirek, this);
-    connect(color_picker, SIGNAL(colorPicked(QString, QColor)), this, SLOT(changeColor(QString, QColor)));
+    bool use_temperature = gradient_point == -1 ? state.has_mirek : false;
+
+    ColorPicker *color_picker = new ColorPicker(id, state.has_color, use_temperature, this);
+
+    if (gradient_point >= 0) {
+        color_picker->setProperty("gradient_point", gradient_point);
+        connect(color_picker, SIGNAL(colorPicked(QString, QColor)), this, SLOT(changeColorGradient(QString, QColor)));
+    } else {
+        connect(color_picker, SIGNAL(colorPicked(QString, QColor)), this, SLOT(changeColor(QString, QColor)));
+    }
+
     connect(color_picker, SIGNAL(mirekPicked(QString, int)), this, SLOT(changeMirek(QString, int)));
+
     colors->setContentWidget(*color_picker);
 }
 

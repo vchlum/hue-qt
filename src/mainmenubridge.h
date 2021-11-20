@@ -60,7 +60,15 @@ class BridgeWidget : public QWidget
         QMap<QString, ItemState>* getStatesByType(QString type);
 
         void updateButtonState(MenuButton* button, ItemState state);
-        MenuButton* createMenuButton(MenuExpendable* menu, ItemState state, void (BridgeWidget::*button_slot)() = NULL, bool back_button = false, QString custom_text = "");
+        MenuButton* createMenuButton(
+            MenuExpendable* menu,
+            ItemState state,
+            void (BridgeWidget::*button_slot)() = NULL,
+            bool back_button = false,
+            QString custom_text = "",
+            bool combined = false,
+            bool combined_all = false
+        );
 
         bool checkAnyServiceIsOn(QMapIterator<QString, QString> services, QString type);
         bool checkAllServicesAreOn(QMapIterator<QString, QString> services, QString type);
@@ -70,7 +78,7 @@ class BridgeWidget : public QWidget
         void setGroups();
         void setLights(QString group_id);
         void setScenes(QString group_id);
-        void setColorsTemperature(QString light_id, QString group_id);
+        void setColorsTemperature(QString light_id, QString group_id, int gradient_point = -1);
 
         void updateAllButtons();
         QString updateStateByEvent(QJsonObject json);
@@ -87,8 +95,10 @@ class BridgeWidget : public QWidget
 
         void switchId(QString id, bool on);
         void dimmId(QString id, int value);
+        void changeColorGradient(QString id, QColor color);
         void changeColor(QString id, QColor color);
         void changeMirek(QString id, int mirek);
+        void gradientSelected(QString id, int point);
 
     signals:
         void sizeChanged();

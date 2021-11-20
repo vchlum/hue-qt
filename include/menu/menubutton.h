@@ -52,17 +52,20 @@ class MenuButton : public QPushButton
         QLabel *icon;
         MenuSlider *slider;
         MenuSwitch *button_switch;
-        bool combined_state;
-        QVarLengthArray<ClickableLabel*> gradient_points;
+        bool combined_state = false;
+        bool combined_all = false;
+        QVarLengthArray<ClickableLabel*> points_list;
         bool manual_set = false;
         int my_border = 5;
         int points_icon_size = 24;
 
     public slots:
+        void pointClicked();
 
     signals:
         void switched(QString id, bool on);
         void dimmed(QString id, int value);
+        void pointed(QString id, int value);
         void buttonRemoved(QString s);
         void goBack();
 
@@ -74,11 +77,12 @@ class MenuButton : public QPushButton
         void setText(QString text);
         void setIcon(QString icon_name);
         void setColor(QColor color);
-        void setColorGradients(QVarLengthArray<QColor> colors);
+        void setColorsPoints(QVarLengthArray<QColor> colors);
         void setSwitch(bool on);
         void setSlider(int value);
-        void setCombined(bool all);
+        void setCombined(bool comb = true, bool all = false);
         bool combined();
+        bool combinedAll();
 };
 
 #endif // MENUBUTTON_H

@@ -42,7 +42,6 @@ MenuButton::MenuButton(QString item_id, bool use_slider, int points, bool use_ba
     identifier = item_id;
     has_slider = use_slider;
     has_switch = use_switch;
-    combined_state = false;
 
     button_layout->setAlignment(Qt::AlignLeft);
     button_layout->setContentsMargins(0, 0, 0, 0);
@@ -63,18 +62,21 @@ MenuButton::MenuButton(QString item_id, bool use_slider, int points, bool use_ba
         slider_box->addWidget(slider);
 
         if (points > 0) {
-            gradient_points.resize(points);
+            points_list.resize(points);
 
             auto *gardient_box = new QHBoxLayout();
 
             for (int i = 0; i < points; ++i) {
                 ClickableLabel *point = new ClickableLabel(this);
+                point->setProperty("id", identifier);
+                point->setProperty("segment", i);
 
                 QPixmap pixmap = getColorPixmapFromSVG(":images/HueIcons/uicontrolsColorScenes.svg", QColor("#2E2E2E"));
-
                 point->setPixmap(pixmap.scaled(points_icon_size, points_icon_size, Qt::KeepAspectRatio));
+                connect(point, SIGNAL(clicked()), this, SLOT(pointClicked()));
+
                 gardient_box->addWidget(point);
-                gradient_points[i] = point;
+                points_list[i] = point;
             }
 
             slider_box->addLayout(gardient_box);
@@ -120,7 +122,7 @@ QSize MenuButton::sizeHint() const {
     if (has_slider)
         my_height += slider->sizeHint().height();
 
-    if (gradient_points.size() > 0)
+    if (points_list.size() > 0)
         my_height += points_icon_size;
     my_width = width();
 
@@ -157,19 +159,19 @@ void MenuButton::setColor(QColor color)
     }
 }
 
-void MenuButton::setColorGradients(QVarLengthArray<QColor> colors)
+void MenuButton::setColorsPoints(QVarLengthArray<QColor> colors)
 {
-    if (gradient_points.length() == 0) {
+    if (points_list.length() == 0) {
         return;
     }
 
-    if (gradient_points.length() != colors.length()) {
+    if (points_list.length() != colors.length()) {
         return;
     }
 
     for (int i = 0; i < colors.length(); ++i) {
         QPixmap pixmap = getColorPixmapFromSVG(":images/HueIcons/uicontrolsColorScenes.svg", colors[i]);
-        gradient_points[i]->setPixmap(pixmap.scaled(24, 24, Qt::KeepAspectRatio));
+        points_list[i]->setPixmap(pixmap.scaled(24, 24, Qt::KeepAspectRatio));
     }
 }
 
@@ -189,12 +191,27 @@ void MenuButton::setSlider(int value)
     manual_set = false;
 }
 
-void MenuButton::setCombined(bool c)
+void MenuButton::setCombined(bool comb, bool all)
 {
-    combined_state = c;
+    combined_state = comb;
+    combined_all = all;
 }
 
 bool MenuButton::combined()
 {
     return combined_state;
 }
+
+bool MenuButton::combinedAll()
+{
+    return combined_all;
+}
+
+ void MenuButton::pointClicked()
+ {
+    ClickableLabel *lbl = qobject_cast<ClickableLabel *>(sender());
+    emit pointed(
+        lbl->property("id").toString(),
+        lbl->property("segment").toInt()
+    );
+ }
