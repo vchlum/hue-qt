@@ -461,6 +461,7 @@ MenuButton* BridgeWidget::createMenuButton(
     void (BridgeWidget::*button_slot)(),
     bool back_button,
     QString custom_text,
+    QString custom_icon,
     bool combined,
     bool combined_all)
 {
@@ -475,7 +476,13 @@ MenuButton* BridgeWidget::createMenuButton(
         connect(button, SIGNAL(buttonRemoved(QString)), this, SLOT(removeFromButtonList(QString)));
     }
 
-    button->setIcon(":images/HueIcons/devicesBridgesV2.svg");
+    if (custom_icon != "") {
+        button->setIcon(custom_icon);
+    } else if (state.archetype != "" && icon_list.contains(state.archetype)) {
+        button->setIcon(icon_list[state.archetype]);
+    } else {
+        button->setIcon(":images/HueIcons/devicesBridgesV2.svg");
+    }
 
     if (custom_text != "") {
         button->setText(custom_text);
@@ -587,7 +594,7 @@ void BridgeWidget::setGroups()
     id = bridge_home_id;
     state = states_groups[id];
     state = getCombinedGroupState(state);
-    button = createMenuButton(groups, state, NULL, false, bridge->deviceName(), true);
+    button = createMenuButton(groups, state, NULL, false, bridge->deviceName(), ":images/HueIcons/roomsOther.svg", true);
     groups->setHeadMenuButton(*button);
 
     connect(button, &MenuButton::clicked, [this]() {
@@ -608,7 +615,7 @@ void BridgeWidget::setGroups()
         }
 
         state = getCombinedGroupState(state);
-        button = createMenuButton(groups, state, &BridgeWidget::groupClicked, false, "", true);
+        button = createMenuButton(groups, state, &BridgeWidget::groupClicked, false, "", "", true);
         groups->addContentMenuButton(*button);
 
         counter++;
@@ -629,20 +636,23 @@ void BridgeWidget::setLights(QString group_id)
     bool group_selected;
     MenuButton* button;
     QString button_text;
+    QString button_icon;
     int counter = 0;
 
     lights->clearContentButtons();
 
     if (group_id == bridge_home_id){
         button_text = tr("All lights");
+        button_icon = ":images/HueIcons/bulbGroup.svg";
     } else {
         button_text = "";
+        button_icon = "";
         group_selected = true;
     }
 
     state = states_groups[group_id];
     state = getCombinedGroupState(state);
-    button = createMenuButton(lights, state, NULL, group_selected, button_text, true);
+    button = createMenuButton(lights, state, NULL, group_selected, button_text, button_icon, true);
     lights->setHeadMenuButton(*button);
 
     connect(button, &MenuButton::clicked, [this]() {
@@ -729,7 +739,7 @@ void BridgeWidget::setColorsTemperature(QString light_id, QString group_id, int 
     }
 
     if (light_id == "") {
-        button = createMenuButton(colors, state, NULL, light_selected, button_text, true, true);
+        button = createMenuButton(colors, state, NULL, light_selected, button_text, ":images/HueIcons/uicontrolsColorScenes.svg", true, true);
     } else {
         button = createMenuButton(colors, state, NULL, light_selected, button_text);
     }
@@ -786,6 +796,7 @@ void BridgeWidget::setColorsTemperature(QString light_id, QString group_id, int 
 void BridgeWidget::setScenes(QString group_id)
 {
     QString id;
+    QString button_text;
     MenuButton* button;
     ItemState state;
     int counter = 0;
@@ -800,7 +811,14 @@ void BridgeWidget::setScenes(QString group_id)
     }
 
     state.dummy = true;
-    button = createMenuButton(scenes, state, NULL, false, tr("Scenes"));
+
+    if (group_id == bridge_home_id) {
+        button_text = tr("Scenes");
+    } else {
+        button_text = states_groups[group_id].name;
+    }
+
+    button = createMenuButton(scenes, state, NULL, false, button_text, ":images/HueIcons/uicontrolsScenes.svg");
     scenes->setHeadMenuButton(*button);
 
     connect(button, &MenuButton::clicked, [this]() {
@@ -820,7 +838,7 @@ void BridgeWidget::setScenes(QString group_id)
             continue;
         }
 
-        button = createMenuButton(scenes, state, &BridgeWidget::sceneClicked, false);
+        button = createMenuButton(scenes, state, &BridgeWidget::sceneClicked, false, "", ":images/HueIcons/uicontrolsScenes.svg");
         scenes->addContentMenuButton(*button);
 
         counter++;
