@@ -8,6 +8,10 @@ qt_add_executable(hue-qt
     mainmenubridge.cpp
     mainmenubridgeutils.h
     mainmenubridgeutils.cpp
+    mainmenusyncbox.h
+    mainmenusyncbox.cpp
+    mainmenusyncboxutils.h
+    mainmenusyncboxutils.cpp
     hue-qt.cpp)
 
 target_include_directories(hue-qt PUBLIC ${CMAKE_SOURCE_DIR}/apps/)

@@ -191,6 +191,13 @@ void MenuButton::setSlider(int value)
     manual_set = false;
 }
 
+void MenuButton::setSliderMax(int value)
+{
+    if (!has_slider) {return;}
+
+    slider->setRange(0, value);
+}
+
 void MenuButton::setCombined(bool comb, bool all)
 {
     combined_state = comb;

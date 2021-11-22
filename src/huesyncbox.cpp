@@ -157,9 +157,16 @@ void HueSyncbox::syncboxRequestFinished(const QVariant type, const QString ret)
 
         case req_syncbox_status:
             {
+                QString device_status = ret;
+                QJsonObject json = QString2QJsonObject(device_status);
+                emit status(json);
                 break;
             }
 
+        case req_syncbox_put_execution:
+            {
+                emit executionFinished();
+            }
         default:
             {
                 break;
@@ -192,4 +199,64 @@ void HueSyncbox::getStatus()
     QString url = url_api_v1.arg(ip(), "");
 
     sendRequestGET(url, (QNetworkRequest::Attribute) req_syncbox_status);
+}
+
+void HueSyncbox::setExecution(QJsonObject json)
+{
+    QString url = url_api_v1.arg(ip(), "execution");
+    QJsonDocument doc(json);
+    QByteArray data = doc.toJson();
+    sendRequestPUT(url, (QNetworkRequest::Attribute) req_syncbox_put_execution, data);
+}
+
+void HueSyncbox::setPower(bool on)
+{
+    QJsonObject json;
+    if (on) {
+        setMode("passthrough");
+    } else {
+        setMode("powersave");
+    }
+}
+
+void HueSyncbox::setSync(bool on)
+{
+    QJsonObject json;
+    json["syncActive"] = on;
+    setExecution(json);
+}
+
+void HueSyncbox::setMode(QString mode)
+{
+    QJsonObject json;
+    json["mode"] = mode;
+    setExecution(json);
+}
+
+void HueSyncbox::setIntensity(QString intensity)
+{
+    QJsonObject json;
+    json["intensity"] = intensity;
+    setExecution(json);
+}
+
+void HueSyncbox::setBrightness(int brightness)
+{
+    QJsonObject json;
+    json["brightness"] = brightness;
+    setExecution(json);
+}
+
+void HueSyncbox::setInput(QString input)
+{
+    QJsonObject json;
+    json["hdmiSource"] = input;
+    setExecution(json);
+}
+
+void HueSyncbox::setGroup(QString groupid)
+{
+    QJsonObject json;
+    json["hueTarget"] = groupid;
+    setExecution(json);
 }

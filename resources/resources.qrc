@@ -1,7 +1,97 @@
 <RCC>
     <qresource prefix="/">
+        <file>images/HueIcons/archetypesBollard.svg</file>
+        <file>images/HueIcons/archetypesCeilingRound.svg</file>
+        <file>images/HueIcons/archetypesCeilingSquare.svg</file>
+        <file>images/HueIcons/archetypesCeilingSquare.svg</file>
+        <file>images/HueIcons/archetypesDeskLamp.svg</file>
+        <file>images/HueIcons/archetypesDoubleSpot.svg</file>
+        <file>images/HueIcons/archetypesFloorLantern.svg</file>
+        <file>images/HueIcons/archetypesFloorShade.svg</file>
+        <file>images/HueIcons/archetypesFloorSpot.svg</file>
+        <file>images/HueIcons/archetypesPendantLong.svg</file>
+        <file>images/HueIcons/archetypesPendantRound.svg</file>
+        <file>images/HueIcons/archetypesRecessedCeiling.svg</file>
+        <file>images/HueIcons/archetypesRecessedFloor.svg</file>
+        <file>images/HueIcons/archetypesSingleSpot.svg</file>
+        <file>images/HueIcons/archetypesTableShade.svg</file>
+        <file>images/HueIcons/archetypesTableWash.svg</file>
+        <file>images/HueIcons/archetypesWallLantern.svg</file>
+        <file>images/HueIcons/archetypesWallShade.svg</file>
+        <file>images/HueIcons/archetypesWallSpot.svg</file>
+        <file>images/HueIcons/bulbCandle.svg</file>
+        <file>images/HueIcons/bulbFlood.svg</file>
+        <file>images/HueIcons/bulbsClassic.svg</file>
+        <file>images/HueIcons/bulbsClassic.svg</file>
+        <file>images/HueIcons/bulbsClassic.svg</file>
+        <file>images/HueIcons/bulbsSpot.svg</file>
+        <file>images/HueIcons/bulbsSultan.svg</file>
+        <file>images/HueIcons/devicesPlug.svg</file>
+        <file>images/HueIcons/heroesBloom.svg</file>
+        <file>images/HueIcons/heroesHuego.svg</file>
+        <file>images/HueIcons/heroesHueplay.svg</file>
+        <file>images/HueIcons/heroesHueplay.svg</file>
+        <file>images/HueIcons/heroesIris.svg</file>
+        <file>images/HueIcons/heroesLightstrip.svg</file>
+        <file>images/HueIcons/heroesLightstrip.svg</file>
+        <file>images/HueIcons/heroesLightstrip.svg</file>
+        <file>images/HueIcons/heroesLightstrip.svg</file>
+        <file>images/HueIcons/otherChristmasTree.svg</file>
+        <file>images/HueIcons/otherMusic.svg</file>
+        <file>images/HueIcons/otherReading.svg</file>
+        <file>images/HueIcons/otherWatchingMovie.svg</file>
+        <file>images/HueIcons/roomsAttic.svg</file>
+        <file>images/HueIcons/roomsBalcony.svg</file>
+        <file>images/HueIcons/roomsBathroom.svg</file>
+        <file>images/HueIcons/roomsBedroom.svg</file>
+        <file>images/HueIcons/roomsCarport.svg</file>
+        <file>images/HueIcons/roomsCloset.svg</file>
+        <file>images/HueIcons/roomsComputer.svg</file>
+        <file>images/HueIcons/roomsDining.svg</file>
+        <file>images/HueIcons/roomsDriveway.svg</file>
+        <file>images/HueIcons/roomsFrontdoor.svg</file>
+        <file>images/HueIcons/roomsGarage.svg</file>
+        <file>images/HueIcons/roomsGuestroom.svg</file>
+        <file>images/HueIcons/roomsGym.svg</file>
+        <file>images/HueIcons/roomsHallway.svg</file>
+        <file>images/HueIcons/roomsKidsbedroom.svg</file>
+        <file>images/HueIcons/roomsKitchen.svg</file>
+        <file>images/HueIcons/roomsLaundryroom.svg</file>
+        <file>images/HueIcons/roomsLiving.svg</file>
+        <file>images/HueIcons/roomsLounge.svg</file>
+        <file>images/HueIcons/roomsMancave.svg</file>
+        <file>images/HueIcons/roomsNursery.svg</file>
+        <file>images/HueIcons/roomsOffice.svg</file>
+        <file>images/HueIcons/roomsOther.svg</file>
+        <file>images/HueIcons/roomsOutdoorSocialtime.svg</file>
+        <file>images/HueIcons/roomsPool.svg</file>
+        <file>images/HueIcons/roomsPorch.svg</file>
+        <file>images/HueIcons/roomsRecreation.svg</file>
+        <file>images/HueIcons/roomsSocialtime.svg</file>
+        <file>images/HueIcons/roomsStaircase.svg</file>
+        <file>images/HueIcons/roomsStorage.svg</file>
+        <file>images/HueIcons/roomsStudio.svg</file>
+        <file>images/HueIcons/roomsTerrace.svg</file>
+        <file>images/HueIcons/roomsToilet.svg</file>
+        <file>images/HueIcons/tabbarHome.svg</file>
+        <file>images/HueIcons/zonesAreasFirstfloor.svg</file>
+        <file>images/HueIcons/zonesAreasGroundfloor.svg</file>
+        <file>images/HueIcons/zonesAreasSecondfloor.svg</file>
+
+        <file>images/HueIcons/bulbGroup.svg</file>
+        <file>images/HueIcons/settingsSoftwareUpdate.svg</file>
+        <file>images/HueIcons/uicontrolsScenes.svg</file>
+        <file>images/HueIcons/uicontrolsColorScenes.svg</file>
+
         <file>images/HueIcons/devicesBridgesV2.svg</file>
         <file>images/HueIcons/tabbarSettings.svg</file>
+        <file>images/HueIcons/routinesDaytime.svg</file>
         <file>images/syncbox.svg</file>
+
+        <file>images/hdmi.svg</file>
+        <file>images/intensity-high.svg</file>
+        <file>images/intensity-intense.svg</file>
+        <file>images/intensity-moderate.svg</file>
+        <file>images/intensity-subtle.svg</file>
     </qresource>
 </RCC>

@@ -80,6 +80,7 @@ class MenuButton : public QPushButton
         void setColorsPoints(QVarLengthArray<QColor> colors);
         void setSwitch(bool on);
         void setSlider(int value);
+        void setSliderMax(int value);
         void setCombined(bool comb = true, bool all = false);
         bool combined();
         bool combinedAll();

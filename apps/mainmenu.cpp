@@ -28,7 +28,7 @@
 
 #include "mainmenu.h"
 #include "mainmenubridge.h"
-#include "menubutton.h"
+#include "mainmenusyncbox.h"
 
 Menu::Menu(QWidget *parent): QWidget(parent, Qt::FramelessWindowHint | Qt::WindowSystemMenuHint)
 {
@@ -296,7 +296,13 @@ void Menu::rebuildAll()
 
         if (syncbox->known()) {
             syncbox->getDevice();
+            syncbox->getStatus();
         }
+
+        SyncboxWidget *syncbox_widget = new SyncboxWidget(syncbox, this);
+        connect(syncbox_widget, SIGNAL(sizeChanged()), this, SLOT(adjustWindow()));
+
+        menu_layout->addWidget(syncbox_widget);
     }
 
     adjustWindow();

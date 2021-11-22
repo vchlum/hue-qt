@@ -26,7 +26,8 @@
 enum HueSyncboxRequestTypes {
     req_registration,
     req_device,
-    req_syncbox_status
+    req_syncbox_status,
+    req_syncbox_put_execution
 };
 
 class HueSyncbox : public HueDevice
@@ -40,6 +41,14 @@ class HueSyncbox : public HueDevice
         void createRegistration();
         void getDevice();
         void getStatus();
+        void setExecution(QJsonObject json);
+        void setPower(bool on);
+        void setSync(bool on);
+        void setMode(QString mode);
+        void setIntensity(QString intensity);
+        void setBrightness(int brightness);
+        void setInput(QString input);
+        void setGroup(QString groupid);
 
     private:
         QString url_api_v1 = "https://%1/api/v1/%2";;
@@ -54,6 +63,8 @@ class HueSyncbox : public HueDevice
         void registrationFailed();
         void registrationSucceed();
         void infoUpdated();
+        void status(QJsonObject json);
+        void executionFinished();
 
     private slots:
         void syncboxRequestFinished(const QVariant type, const QString ret);
