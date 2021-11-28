@@ -15,6 +15,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <QWindow>
 #include <QLabel>
 #include <QGroupBox>
 #include <QPushButton>
@@ -35,6 +36,11 @@ Menu::Menu(QWidget *parent): QWidget(parent, Qt::FramelessWindowHint | Qt::Windo
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Maximum);
 
     setStyleSheet("background-color: grey;");
+
+    connect(this, &Menu::clicked, [this] () {
+        QWindow* window = windowHandle();
+        window->startSystemMove();
+    });
 
     bridge_list = new HueBridgeList();
     syncbox_list = new HueSyncboxList();
@@ -76,27 +82,17 @@ Menu::Menu(QWidget *parent): QWidget(parent, Qt::FramelessWindowHint | Qt::Windo
     rebuildAll();
 }
 
+void Menu::mousePressEvent(QMouseEvent* event)
+{
+    (void) event;
+    emit clicked();
+}
+
 void Menu::adjustWindow()
 {
     QTimer::singleShot(100, [this]() {
         adjustSize();
     });
-}
-
-void Menu::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton) {
-        dragPosition = event->globalPosition().toPoint() - frameGeometry().topLeft();
-        event->accept();
-    }
-}
-
-void Menu::mouseMoveEvent(QMouseEvent *event)
-{
-    if (event->buttons() & Qt::LeftButton) {
-        move(event->globalPosition().toPoint() - dragPosition);
-        event->accept();
-    }
 }
 
 void Menu::addDiscoveredBridge()

@@ -1,3 +1,4 @@
+find_package(Qt6 COMPONENTS Gui REQUIRED)
 find_package(Qt6 COMPONENTS Widgets REQUIRED)
 
 qt_add_executable(hue-qt
@@ -16,6 +17,7 @@ qt_add_executable(hue-qt
 
 target_include_directories(hue-qt PUBLIC ${CMAKE_SOURCE_DIR}/apps/)
 
+target_link_libraries(hue-qt PRIVATE Qt6::Gui)
 target_link_libraries(hue-qt PRIVATE Qt6::Widgets)
 target_link_libraries(hue-qt PRIVATE hue)
 target_link_libraries(hue-qt PRIVATE menu)

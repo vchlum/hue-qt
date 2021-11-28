@@ -56,10 +56,10 @@ class Menu : public QWidget
         QWidget* createDeviceMenu();
 
     protected:
-        void mouseMoveEvent(QMouseEvent *event) override;
-        void mousePressEvent(QMouseEvent *event) override;
+        void mousePressEvent(QMouseEvent* event) override;
 
     signals:
+        void clicked();
 
     private slots:
         void adjustWindow();
