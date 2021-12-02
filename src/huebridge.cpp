@@ -24,8 +24,27 @@
 #include "hueutils.h"
 #include "huebridge.h"
 
+const QByteArray pem_cert("-----BEGIN CERTIFICATE-----\n\
+MIICMjCCAdigAwIBAgIUO7FSLbaxikuXAljzVaurLXWmFw4wCgYIKoZIzj0EAwIw\n\
+OTELMAkGA1UEBhMCTkwxFDASBgNVBAoMC1BoaWxpcHMgSHVlMRQwEgYDVQQDDAty\n\
+b290LWJyaWRnZTAiGA8yMDE3MDEwMTAwMDAwMFoYDzIwMzgwMTE5MDMxNDA3WjA5\n\
+MQswCQYDVQQGEwJOTDEUMBIGA1UECgwLUGhpbGlwcyBIdWUxFDASBgNVBAMMC3Jv\n\
+b3QtYnJpZGdlMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEjNw2tx2AplOf9x86\n\
+aTdvEcL1FU65QDxziKvBpW9XXSIcibAeQiKxegpq8Exbr9v6LBnYbna2VcaK0G22\n\
+jOKkTqOBuTCBtjAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBhjAdBgNV\n\
+HQ4EFgQUZ2ONTFrDT6o8ItRnKfqWKnHFGmQwdAYDVR0jBG0wa4AUZ2ONTFrDT6o8\n\
+ItRnKfqWKnHFGmShPaQ7MDkxCzAJBgNVBAYTAk5MMRQwEgYDVQQKDAtQaGlsaXBz\n\
+IEh1ZTEUMBIGA1UEAwwLcm9vdC1icmlkZ2WCFDuxUi22sYpLlwJY81Wrqy11phcO\n\
+MAoGCCqGSM49BAMCA0gAMEUCIEBYYEOsa07TH7E5MJnGw557lVkORgit2Rm1h3B2\n\
+sFgDAiEA1Fj/C3AN5psFMjo0//mrQebo0eKd3aWRx+pQY08mk48=\n\
+-----END CERTIFICATE-----");
+
 HueBridge::HueBridge(QString ip, HueDevice *parent): HueDevice(ip, parent)
 {
+    QList<QSslCertificate> ca_certificates;
+    ca_certificates << QSslCertificate(pem_cert);
+    ssl_configuration.setCaCertificates(ca_certificates);
+
     event_manager = new QNetworkAccessManager();
     connect(event_manager, SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)), this, SLOT(onSslError(QNetworkReply*, QList<QSslError>)));
     connect(event_manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(eventRequestFinished(QNetworkReply*)));
@@ -40,8 +59,9 @@ void HueBridge::setUserName(QString s)
 {
     user_name = s;
 
+    setSslConfiguration(ssl_configuration);
+
     request_headers.clear();
-    request_headers.append(createHeader("ssl", "False"));
     request_headers.append(createHeader("hue-application-key", user_name));
 
     setKnown();
@@ -129,6 +149,8 @@ void HueBridge::runEventStream()
     QString url = url_api_v2_event_stream.arg(ip());
 
     QNetworkRequest request;
+    request.setSslConfiguration(ssl_configuration);
+    request.setPeerVerifyName(id());
     request.setUrl(QUrl(url));
     request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::AlwaysNetwork); // Events shouldn't be cached
 
@@ -269,25 +291,25 @@ void HueBridge::getStatus()
     sendRequestGET(url, (QNetworkRequest::Attribute) req_bridge_status_v2);
 }
 
-void HueBridge::putLight(QString id, QJsonObject json)
+void HueBridge::putLight(QString light_id, QJsonObject json)
 {
-    QString url = url_api_v2.arg(ip()) + "/light/" + id;
+    QString url = url_api_v2.arg(ip()) + "/light/" + light_id;
     QJsonDocument doc(json);
     QByteArray data = doc.toJson();
     sendRequestPUT(url, (QNetworkRequest::Attribute) req_bridge_put_v2 , data);
 }
 
-void HueBridge::putGroupedLight(QString id, QJsonObject json)
+void HueBridge::putGroupedLight(QString group_id, QJsonObject json)
 {
-    QString url = url_api_v2.arg(ip()) + "/grouped_light/" + id;
+    QString url = url_api_v2.arg(ip()) + "/grouped_light/" + group_id;
     QJsonDocument doc(json);
     QByteArray data = doc.toJson();
     sendRequestPUT(url, (QNetworkRequest::Attribute) req_bridge_put_v2 , data);
 }
 
-void HueBridge::putScene(QString id, QJsonObject json)
+void HueBridge::putScene(QString scene_id, QJsonObject json)
 {
-    QString url = url_api_v2.arg(ip()) + "/scene/" + id;
+    QString url = url_api_v2.arg(ip()) + "/scene/" + scene_id;
     QJsonDocument doc(json);
     QByteArray data = doc.toJson();
     sendRequestPUT(url, (QNetworkRequest::Attribute) req_bridge_put_v2 , data);

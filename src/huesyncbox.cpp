@@ -24,8 +24,25 @@
 #include "hueutils.h"
 #include "huesyncbox.h"
 
+const QByteArray pem_cert("-----BEGIN CERTIFICATE-----\n\
+MIIBwDCCAWagAwIBAgIBATAKBggqhkjOPQQDAjA2MQswCQYDVQQGEwJOTDEUMBIG\n\
+A1UECgwLUGhpbGlwcyBIdWUxETAPBgNVBAMMCHJvb3QtaHNiMCAXDTE3MDEwMTAw\n\
+MDAwMFoYDzk5OTkxMjMxMjM1OTU5WjA2MQswCQYDVQQGEwJOTDEUMBIGA1UECgwL\n\
+UGhpbGlwcyBIdWUxETAPBgNVBAMMCHJvb3QtaHNiMFkwEwYHKoZIzj0CAQYIKoZI\n\
+zj0DAQcDQgAEr9FgOxnsonsrnUZr3C4ggST7YCR9wISvDuwlNdZcAz4HiVCNmAAP\n\
+tAnAFDG0U19Rmc4MfRYBMO8GrOHrOkZ7sKNjMGEwHQYDVR0OBBYEFCK+VIWZqp++\n\
+DHqmGLWEZHYdH9v7MB8GA1UdIwQYMBaAFCK+VIWZqp++DHqmGLWEZHYdH9v7MA8G\n\
+A1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgGGMAoGCCqGSM49BAMCA0gAMEUC\n\
+IAFDI0Q4IOPxV7cY4wSVOJAn4y5AdZwrItJ1XuNpmCltAiEA5c6wcu6qmF596uyA\n\
+r7xLnr3/F5zJxrE3AyLD4t+5oKs=\n\
+-----END CERTIFICATE-----");
+
 HueSyncbox::HueSyncbox(QString ip, HueDevice *parent): HueDevice(ip, parent)
 {
+    QList<QSslCertificate> ca_certificates;
+    ca_certificates << QSslCertificate(pem_cert);
+    ssl_configuration.setCaCertificates(ca_certificates);
+
     connect(this, SIGNAL(requestDeviceFinished(const QVariant, const QString)), this, SLOT(syncboxRequestFinished(const QVariant, const QString)));
 }
 
@@ -34,7 +51,6 @@ void HueSyncbox::setAccessToken(QString s)
     access_token = s;
 
     request_headers.clear();
-    request_headers.append(createHeader("ssl", "False"));
     request_headers.append(createHeader("Authorization", "Bearer " + access_token));
 
     setKnown();
@@ -48,6 +64,8 @@ bool HueSyncbox::updateSyncboxInfo(QJsonObject data)
         if (id() != data["uniqueId"].toString()) {
             setId(data["uniqueId"].toString());
             changed = true;
+
+            setSslConfiguration(ssl_configuration);
         }
     }
 

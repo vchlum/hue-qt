@@ -51,6 +51,7 @@ class HueSyncbox : public HueDevice
         void setGroup(QString groupid);
 
     private:
+        QSslConfiguration ssl_configuration = QSslConfiguration::defaultConfiguration();
         QString url_api_v1 = "https://%1/api/v1/%2";
         int registration_counter;
         QTimer *registration_timer;

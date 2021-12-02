@@ -137,6 +137,8 @@ class BridgeWidget : public QWidget
         bool waiting_events = false;
         QMap<MenuButton*, QString> refresh_button_list;
 
+        const int bridge_delay = 150;
+
         void addGroupState(QJsonObject json);
         void addLightState(QJsonObject json);
         void addSceneState(QJsonObject json);

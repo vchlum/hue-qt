@@ -32,7 +32,9 @@ HueDevice::HueDevice(QString address, QObject *parent): QObject(parent)
 void HueDevice::onSslError(QNetworkReply* r, QList<QSslError> l) {
     (void) l;
 
-    r->ignoreSslErrors();
+    if (!use_ssl) {
+        r->ignoreSslErrors();
+    }
 }
 
 void HueDevice::setDeviceName(QString s)
@@ -81,6 +83,12 @@ bool HueDevice::deviceConnected()
     return device_connected;
 }
 
+void HueDevice::setSslConfiguration(QSslConfiguration ssl_configuration)
+{
+    use_ssl = true;
+    ssl_conf = ssl_configuration;
+}
+
 QStringList HueDevice::createHeader(QString key, QString value)
 {
     QStringList header;
@@ -94,6 +102,12 @@ QStringList HueDevice::createHeader(QString key, QString value)
 void HueDevice::sendRequestGET(QString url, QNetworkRequest::Attribute type)
 {
     QNetworkRequest request;
+
+    if (use_ssl) {
+        request.setSslConfiguration(ssl_conf);
+        request.setPeerVerifyName(id());
+    }
+
     request.setUrl(QUrl(url));
     request.setAttribute(HUEREQUEST_TYPE, type);
     foreach (const QStringList &header, request_headers) {
@@ -110,8 +124,15 @@ void HueDevice::sendRequestGET(QString url, QNetworkRequest::Attribute type)
 void HueDevice::sendRequestPUT(QString url, QNetworkRequest::Attribute type, const QByteArray data)
 {
     QNetworkRequest request;
+
+    if (use_ssl) {
+        request.setSslConfiguration(ssl_conf);
+        request.setPeerVerifyName(id());
+    }
+
     request.setUrl(QUrl(url));
     request.setAttribute(HUEREQUEST_TYPE, type);
+
     foreach (const QStringList &header, request_headers) {
         if (header.isEmpty()) {
             break;
@@ -126,6 +147,12 @@ void HueDevice::sendRequestPUT(QString url, QNetworkRequest::Attribute type, con
 void HueDevice::sendRequestPOST(QString url, QNetworkRequest::Attribute type, const QByteArray data)
 {
     QNetworkRequest request;
+
+    if (use_ssl) {
+        request.setSslConfiguration(ssl_conf);
+        request.setPeerVerifyName(id());
+    }
+
     request.setUrl(QUrl(url));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setAttribute(HUEREQUEST_TYPE, type);
@@ -144,6 +171,12 @@ void HueDevice::sendRequestPOST(QString url, QNetworkRequest::Attribute type, co
 void HueDevice::sendRequestDELETE(QString url, QNetworkRequest::Attribute type)
 {
     QNetworkRequest request;
+
+    if (use_ssl) {
+        request.setSslConfiguration(ssl_conf);
+        request.setPeerVerifyName(id());
+    }
+
     request.setUrl(QUrl(url));
     request.setAttribute(HUEREQUEST_TYPE, type);
     foreach (const QStringList &header, request_headers) {
@@ -170,10 +203,10 @@ void HueDevice::requestFinished(QNetworkReply *reply)
     }
 
     if (known() && !device_connected) {
+        device_connected = true;
+
         emit connected();
     }
-
-    device_connected = true;
 
     const QString ret = reply->readAll();
 

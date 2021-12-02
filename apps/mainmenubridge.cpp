@@ -145,7 +145,7 @@ void BridgeWidget::dimmId(QString id, int value)
             service.next();
 
             if (service.value() == "light" && (states_lights[service.key()].on || !any_on)) {
-                delay(100);
+                delay(bridge_delay);
                 bridge->putLight(service.key(), json);
             }
         }
@@ -235,7 +235,7 @@ void BridgeWidget::changeColor(QString id, QColor color)
             service.next();
 
             if (service.value() == "light" && (states_lights[service.key()].on || !any_on)) {
-                delay(100);
+                delay(bridge_delay);
                 bridge->putLight(service.key(), json);
             }
         }
@@ -267,7 +267,7 @@ void BridgeWidget::changeMirek(QString id, int mirek)
             service.next();
 
             if (service.value() == "light" && (states_lights[service.key()].on || !any_on)) {
-                delay(100);
+                delay(bridge_delay);
                 bridge->putLight(service.key(), json);
             }
         }

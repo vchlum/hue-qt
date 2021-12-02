@@ -78,6 +78,7 @@ class HueBridge : public HueDevice
         void putScene(QString id, QJsonObject json);
 
     private:
+        QSslConfiguration ssl_configuration = QSslConfiguration::defaultConfiguration();
         QString url_api_v1 = "http://%1/api";
         QString url_api_v1_user = url_api_v1 + "/%2/%3";
         QString url_api_v2 = "https://%1/clip/v2/resource";

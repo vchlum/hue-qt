@@ -49,6 +49,7 @@ class HueDevice : public QObject
 
         bool deviceConnected();
 
+        void setSslConfiguration(QSslConfiguration ssl_configuration);
         QStringList createHeader(QString key, QString value);
         void sendRequestGET(QString url, QNetworkRequest::Attribute type);
         void sendRequestPUT(QString url, QNetworkRequest::Attribute type, const QByteArray json_data);
@@ -62,6 +63,8 @@ class HueDevice : public QObject
         QString device_name = "";
         bool paired = false;
         bool device_connected = false;
+        bool use_ssl = false;
+        QSslConfiguration ssl_conf = QSslConfiguration::defaultConfiguration();
 
     signals:
         void requestDeviceFinished(const QVariant type, const QString ret);
