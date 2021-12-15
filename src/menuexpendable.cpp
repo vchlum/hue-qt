@@ -110,9 +110,9 @@ void MenuExpendable::setHeadMenuButton(MenuButton &button)
 
 void MenuExpendable::adjustContentSize()
 {
-    auto content_layout = content_area->widget()->layout();
+    auto content_widget = content_area->widget();
 
-    if (content_layout->itemAt(0) == NULL) {
+    if (content_widget->layout()->itemAt(0) == NULL) {
         return;
     }
 
@@ -122,7 +122,7 @@ void MenuExpendable::adjustContentSize()
         collapsedHeight = toggle_button->sizeHint().height();
     }
 
-    auto contentHeight = content_layout->sizeHint().height();
+    auto contentHeight = content_widget->sizeHint().height();
 
     contentHeight = contentHeight > 500 ? 500 : contentHeight;
 
@@ -138,7 +138,7 @@ void MenuExpendable::adjustContentSize()
     content_animation->setDuration(animation_duration);
     content_animation->setStartValue(0);
     content_animation->setEndValue(contentHeight);
-    content_area->setMinimumWidth(content_layout->sizeHint().width());
+    content_area->setMinimumWidth(content_widget->sizeHint().width());
 
     adjustSize();
 }

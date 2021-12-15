@@ -86,6 +86,9 @@ class ColorPicker : public QWidget
     protected:
 
     private:
+        int size_helper = 250;
+        int width_helper = 0;
+        int height_helper = 0;
         QString identifier;
         QVBoxLayout* main_layout;
 

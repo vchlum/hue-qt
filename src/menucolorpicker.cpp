@@ -133,7 +133,6 @@ void TemperatureBox::mousePressEvent(QMouseEvent *e)
 
 ColorPicker::ColorPicker(QString id, bool use_color, bool use_temperature, QWidget *parent): QWidget(parent)
 {
-    int tmp_size = 250;
     identifier = id;
     main_layout = new QVBoxLayout(this);
 
@@ -144,35 +143,43 @@ ColorPicker::ColorPicker(QString id, bool use_color, bool use_temperature, QWidg
 
     if (use_color) {
         ColorWheel* color_wheel = new ColorWheel(this);
+        color_wheel->setContentsMargins(0, 0, 0, 0);
 
-        color_wheel->setMinimumHeight(tmp_size);
-        color_wheel->setMinimumWidth(tmp_size);
-        color_wheel->setMaximumHeight(tmp_size);
-        color_wheel->setMaximumWidth(tmp_size);
+        color_wheel->setMinimumHeight(size_helper);
+        color_wheel->setMinimumWidth(size_helper);
+        color_wheel->setMaximumHeight(size_helper);
+        color_wheel->setMaximumWidth(size_helper);
 
         connect(color_wheel, &ColorWheel::colorPicked, [this] (QColor color) {
             emit colorPicked(identifier, color);
         });
 
         main_layout->addWidget(color_wheel);
+
+        width_helper = size_helper;
+        height_helper += size_helper + 1;
     }
 
     if (use_temperature) {
         TemperatureBox* temperature_box = new TemperatureBox(this);
+        temperature_box->setContentsMargins(0, 0, 0, 0);
 
-        temperature_box->setMinimumHeight(tmp_size / 4.5);
-        temperature_box->setMinimumWidth(tmp_size);
-        temperature_box->setMaximumHeight(tmp_size / 4.5);
-        temperature_box->setMaximumWidth(tmp_size);
+        temperature_box->setMinimumHeight(size_helper / 4);
+        temperature_box->setMinimumWidth(size_helper);
+        temperature_box->setMaximumHeight(size_helper / 4);
+        temperature_box->setMaximumWidth(size_helper);
 
         connect(temperature_box, &TemperatureBox::mirekPicked, [this] (int mirek) {
             emit mirekPicked(identifier, mirek);
         });
 
         main_layout->addWidget(temperature_box);
+
+        width_helper = size_helper;
+        height_helper += (size_helper / 4) + 1;
     }
 }
 
 QSize ColorPicker::sizeHint() const {
-    return main_layout->sizeHint();
+    return QSize(width_helper, height_helper);
 }
