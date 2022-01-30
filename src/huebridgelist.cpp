@@ -62,6 +62,20 @@ HueBridge* HueBridgeList::addBridge(QString ip)
     return bridge;
 }
 
+bool HueBridgeList::removeBridge(QString id)
+{
+    HueBridge *bridge;
+    bridge = findBridge(id);
+    if (bridge == NULL) {
+        return false;
+    }
+
+    list.removeOne(bridge);
+    needSave();
+
+    return true;
+}
+
 void HueBridgeList::needSave()
 {
     saveBridges();

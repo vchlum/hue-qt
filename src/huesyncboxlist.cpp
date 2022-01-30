@@ -62,6 +62,20 @@ HueSyncbox* HueSyncboxList::addSyncbox(QString ip)
     return syncbox;
 }
 
+bool HueSyncboxList::removeSyncbox(QString id)
+{
+    HueSyncbox *syncbox;
+    syncbox = findSyncbox(id);
+    if (syncbox == NULL) {
+        return false;
+    }
+
+    list.removeOne(syncbox);
+    needSave();
+
+    return true;
+}
+
 void HueSyncboxList::needSave()
 {
     saveSyncboxes();

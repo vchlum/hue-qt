@@ -53,6 +53,7 @@ class Menu : public QWidget
         QPushButton *button_settings;
         QString selected_device = "";
 
+        QMenu* deviceButtonContext(QString id = "");
         QWidget* createDeviceMenu();
 
     protected:
@@ -69,6 +70,8 @@ class Menu : public QWidget
         void addSyncboxIP();
         void rebuildAll();
         void deviceButtonClicked();
+        void deviceContextClicked();
+        void removeDevice();
 };
 
 #endif // MAINMENU_H

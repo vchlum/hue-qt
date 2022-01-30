@@ -179,6 +179,31 @@ void Menu::deviceButtonClicked()
     rebuildAll();
 }
 
+void Menu::deviceContextClicked()
+{
+    QPushButton *btn = qobject_cast<QPushButton *>(sender());
+
+    QMenu *context_menu = new QMenu();
+
+    QAction *act_remove_device = new QAction(tr("Remove"), context_menu);
+    QVariant id (btn->property("device_id").toString());
+    act_remove_device->setData(id);
+    connect(act_remove_device, SIGNAL(triggered()), this, SLOT(removeDevice()));
+    context_menu->addAction(act_remove_device);
+
+    context_menu->exec(QCursor::pos());
+}
+
+void Menu::removeDevice()
+{
+    QAction *act = qobject_cast<QAction *>(sender());
+    QVariant id = act->data();
+
+    if (bridge_list->removeBridge(id.toString()) || syncbox_list->removeSyncbox(id.toString())) {
+        rebuildAll();
+    }
+}
+
 QWidget* Menu::createDeviceMenu()
 {
     QWidget *device_widget = new QWidget(this);
@@ -198,6 +223,7 @@ QWidget* Menu::createDeviceMenu()
                 // We dont have the ID yet, use at least IP
                 id = bridge->ip();
             }
+
             bridge_button->setProperty("device_id", id);
             bridge_button->setToolTip(bridge->deviceName());
             bridge_button->setIcon(icon);
@@ -205,6 +231,9 @@ QWidget* Menu::createDeviceMenu()
             bridge_button->setStyleSheet("QPushButton::menu-indicator {width:0px;} QPushButton {border: none;}");
 
             connect(bridge_button, SIGNAL(clicked()), this, SLOT(deviceButtonClicked()));
+
+            bridge_button->setContextMenuPolicy(Qt::CustomContextMenu);
+            connect(bridge_button, &QWidget::customContextMenuRequested, this, &Menu::deviceContextClicked);
 
             device_layout->addWidget(bridge_button);
             device_layout->setAlignment(bridge_button, Qt::AlignRight);
@@ -227,6 +256,9 @@ QWidget* Menu::createDeviceMenu()
             syncbox_button->setStyleSheet("QPushButton::menu-indicator {width:0px;} QPushButton {border: none;}");
 
             connect(syncbox_button, SIGNAL(clicked()), this, SLOT(deviceButtonClicked()));
+
+            syncbox_button->setContextMenuPolicy(Qt::CustomContextMenu);
+            connect(syncbox_button, &QWidget::customContextMenuRequested, this, &Menu::deviceContextClicked);
 
             device_layout->addWidget(syncbox_button);
             device_layout->setAlignment(syncbox_button, Qt::AlignRight);

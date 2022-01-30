@@ -32,6 +32,7 @@ class HueBridgeList : public HueList
         explicit HueBridgeList(HueList *parent = 0);
         HueBridge* findBridge(QString s);
         HueBridge* addBridge(QString ip);
+        bool removeBridge(QString id);
         void saveBridges();
         void loadBridges();
 

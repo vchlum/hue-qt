@@ -32,6 +32,7 @@ class HueSyncboxList : public HueList
         explicit HueSyncboxList(HueList *parent = 0);
         HueSyncbox* findSyncbox(QString s);
         HueSyncbox* addSyncbox(QString ip);
+        bool removeSyncbox(QString id);
         void saveSyncboxes();
         void loadSyncboxes();
 
