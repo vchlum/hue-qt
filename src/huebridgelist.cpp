@@ -112,7 +112,7 @@ void HueBridgeList::createBridge(QJsonObject data, QString ip, bool on_load)
 
 void HueBridgeList::saveBridges()
 {
-    QFile f(QStringLiteral("bridge.json"));
+    QFile f(getStoragePath("bridge.json"));
     QJsonArray json_array;
 
     foreach(HueBridge *bridge, list) {
@@ -135,7 +135,7 @@ void HueBridgeList::saveBridges()
 
 void HueBridgeList::loadBridges()
 {
-    QFile f(QStringLiteral("bridge.json"));
+    QFile f(getStoragePath("bridge.json"));
     QJsonArray json_array;
 
     if (!f.open(QIODevice::ReadOnly)) {

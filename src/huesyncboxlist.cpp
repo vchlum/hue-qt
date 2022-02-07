@@ -112,7 +112,7 @@ void HueSyncboxList::createSyncbox(QJsonObject data, QString ip, bool on_load)
 
 void HueSyncboxList::saveSyncboxes()
 {
-    QFile f(QStringLiteral("syncbox.json"));
+    QFile f(getStoragePath("syncbox.json"));
     QJsonArray json_array;
 
     foreach(HueSyncbox *bridge, list) {
@@ -135,7 +135,7 @@ void HueSyncboxList::saveSyncboxes()
 
 void HueSyncboxList::loadSyncboxes()
 {
-    QFile f(QStringLiteral("syncbox.json"));
+    QFile f(getStoragePath("syncbox.json"));
     QJsonArray json_array;
 
     if (!f.open(QIODevice::ReadOnly)) {

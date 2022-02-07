@@ -25,6 +25,7 @@ class HueList : public QObject
     Q_OBJECT
     public:
         explicit HueList(QObject *parent = 0);
+        QString getStoragePath(QString name);
 
     private:
 

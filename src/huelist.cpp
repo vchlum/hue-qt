@@ -16,8 +16,25 @@
  */
 
 #include "huelist.h"
+#include <QtCore/qglobal.h>
+#include <QDir>
 
 HueList::HueList(QObject *parent): QObject(parent)
 {
-        
+
+}
+
+QString HueList::getStoragePath(QString name)
+{
+    #if defined(Q_OS_LINUX)
+        QDir dir(QDir::homePath() + "/.config/hue-qt/");
+
+        if (!dir.exists()) {
+            dir.mkpath(".");
+        }
+
+        return qPrintable(dir.path() + "/" + name);
+    #else
+        return name;
+    #endif
 }
