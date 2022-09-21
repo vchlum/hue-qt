@@ -54,6 +54,8 @@ struct ItemState {
     QVarLengthArray<QColor> gradient_points;
 
     QMap<QString, QString> services; // <rid, rtype>
+    QMap<QString, QString> children; // <rid, rtype>
+    QMap<QString, QString> light_services; // <rid, rtype>
 
     QString grouped_light_rid = "";
 
@@ -63,6 +65,7 @@ struct ItemState {
     QVarLengthArray<MenuButton*> items;
 };
 
+ItemState getDeviceFromJson(QJsonObject json);
 ItemState getLightFromJson(QJsonObject json);
 ItemState getGroupFromJson(QJsonObject json);
 ItemState getSceneFromJson(QJsonObject json);

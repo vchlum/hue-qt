@@ -138,9 +138,9 @@ void BridgeWidget::dimmId(QString id, int value)
     json["dimming"] = json_brightness;
 
     if (states_groups.contains(id)) {
-        bool any_on = checkAnyServiceIsOn(states_groups[id].services, "light");
+        bool any_on = checkAnyServiceIsOn(states_groups[id].light_services, "light");
 
-        QMapIterator<QString, QString> service(states_groups[id].services);
+        QMapIterator<QString, QString> service(states_groups[id].light_services);
         while (service.hasNext()) {
             service.next();
 
@@ -228,9 +228,9 @@ void BridgeWidget::changeColor(QString id, QColor color)
     json["color"] = json_color;
 
     if (states_groups.contains(id)) {
-        bool any_on = checkAnyServiceIsOn(states_groups[id].services, "light");
+        bool any_on = checkAnyServiceIsOn(states_groups[id].light_services, "light");
 
-        QMapIterator<QString, QString> service(states_groups[id].services);
+        QMapIterator<QString, QString> service(states_groups[id].light_services);
         while (service.hasNext()) {
             service.next();
 
@@ -260,9 +260,9 @@ void BridgeWidget::changeMirek(QString id, int mirek)
     json["color_temperature"] = json_mirek;
 
     if (states_groups.contains(id)) {
-        bool any_on = checkAnyServiceIsOn(states_groups[id].services, "light");
+        bool any_on = checkAnyServiceIsOn(states_groups[id].light_services, "light");
 
-        QMapIterator<QString, QString> service(states_groups[id].services);
+        QMapIterator<QString, QString> service(states_groups[id].light_services);
         while (service.hasNext()) {
             service.next();
 
@@ -288,6 +288,19 @@ void BridgeWidget::gradientSelected(QString id, int point)
     lights->toggle(false);
     colors->toggle(true);
     scenes->toggle(false);
+}
+
+void BridgeWidget::addDeviceState(QJsonObject json)
+{
+    QString id;
+
+    if (! json.contains("id")) {
+        return;
+    }
+
+    id = json["id"].toString();
+
+    states_devices[id] = getDeviceFromJson(json);
 }
 
 void BridgeWidget::addGroupState(QJsonObject json)
@@ -336,6 +349,9 @@ QMap<QString, ItemState>* BridgeWidget::getStatesByType(QString type)
     if (type == "bridge_home")
         return &states_groups;
 
+    else if (type == "devices")
+        return &states_devices;
+
     else if (type == "room")
         return &states_groups;
 
@@ -356,6 +372,7 @@ void BridgeWidget::createStates(QJsonObject json)
     QJsonObject json_item;
     QString type;
 
+    states_devices.clear();
     states_groups.clear();
     states_lights.clear();
     states_scenes.clear();
@@ -375,7 +392,10 @@ void BridgeWidget::createStates(QJsonObject json)
 
         type = json_item["type"].toString();
 
-        if (type == "bridge_home")
+        if (type == "device")
+            addDeviceState(json_item);
+
+        else if (type == "bridge_home")
             addGroupState(json_item);
 
         else if (type == "room")
@@ -390,6 +410,16 @@ void BridgeWidget::createStates(QJsonObject json)
         else if (type == "scene")
             addSceneState(json_item);
     }
+
+    QMapIterator<QString, ItemState> group(states_groups);
+
+    while (group.hasNext()) {
+            group.next();
+
+            QString id = group.key();
+            states_groups[id].light_services = getLightServicesByGroup(id);
+    }
+
 }
 
 void BridgeWidget::updateButtonState(MenuButton* button, ItemState state)
@@ -402,7 +432,7 @@ void BridgeWidget::updateButtonState(MenuButton* button, ItemState state)
     bool is_all_on = false;
 
     if (state.has_on && button->combinedAll()) {
-        is_all_on = checkAllServicesAreOn(state.services, "light");
+        is_all_on = checkAllServicesAreOn(state.light_services, "light");
         button->setSwitch(is_all_on);
         is_on = state.on;
     } else if (state.has_on) {
@@ -513,6 +543,51 @@ MenuButton* BridgeWidget::createMenuButton(
     return button;
 }
 
+QMap<QString, QString> BridgeWidget::getLightServicesByGroup(QString id)
+{
+    QMap<QString, QString> light_services;
+
+    if (states_groups[id].type == "bridge_home") {
+        QMapIterator<QString, ItemState> light(states_lights);
+
+        while (light.hasNext()) {
+            light.next();
+
+            light_services[light.key()] = light.value().type;
+        }
+    } else {
+        QMapIterator<QString, QString> child(states_groups[id].children);
+
+        while (child.hasNext()) {
+            child.next();
+            id = child.key();
+
+            if (child.value() == "light") {
+                light_services[child.key()] = child.value();
+            }
+
+            if (child.value() == "device") {
+                if (! states_devices.contains(id)) {
+                    continue;
+                }
+
+                QMapIterator<QString, QString> service(states_devices[id].services);
+
+                while (service.hasNext()) {
+                    service.next();
+                    QString service_id = service.key();
+
+                    if (service.value() == "light") {
+                        light_services[service.key()] = service.value();
+                    }
+                }
+            }
+        }
+    }
+
+    return light_services;
+}
+
 bool BridgeWidget::checkAnyServiceIsOn(QMapIterator<QString, QString> services, QString type)
 {
     QString id;
@@ -563,7 +638,7 @@ ItemState BridgeWidget::getCombinedGroupState(ItemState base_state)
     QString id;
     QString type;
 
-    QMapIterator<QString, QString> service(state.services);
+    QMapIterator<QString, QString> service(state.light_services);
     while (service.hasNext()) {
         service.next();
 
@@ -577,7 +652,7 @@ ItemState BridgeWidget::getCombinedGroupState(ItemState base_state)
         state = combineTwoStates(state, states_lights[id]);
     }
 
-    state.services = base_state.services;
+    state.light_services = base_state.light_services;
 
     return state;
 }
@@ -679,23 +754,12 @@ void BridgeWidget::setLights(QString group_id)
         });
     }
 
-    state_selected_group = states_groups[group_id];
+    QMapIterator<QString, QString> light(states_groups[group_id].light_services);
 
-    QMapIterator<QString, ItemState> item(states_lights);
-    while (item.hasNext()) {
-        item.next();
+    while (light.hasNext()) {
+        light.next();
 
-        id = item.key();
-
-        if (! state_selected_group.services.contains(id)) {
-            continue;
-        }
-
-        if (state_selected_group.services[id] != "light") {
-            continue;
-        }
-
-        state = item.value();
+        state = states_lights[light.key()];
         button = createMenuButton(lights, state, &BridgeWidget::lightClicked, false);
         lights->addContentMenuButton(*button);
 
@@ -949,7 +1013,7 @@ void BridgeWidget::updateRelatedButtons()
 
             bool affected = false;
 
-            QMapIterator<QString, QString> j(state.services);
+            QMapIterator<QString, QString> j(state.light_services);
             while (j.hasNext()) {
                 j.next();
 

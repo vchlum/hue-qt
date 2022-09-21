@@ -129,6 +129,7 @@ class BridgeWidget : public QWidget
         MenuExpendable* colors;
         bool rebuild = true;
 
+        QMap<QString, ItemState> states_devices;
         QMap<QString, ItemState> states_groups;
         QMap<QString, ItemState> states_lights;
         QMap<QString, ItemState> states_scenes;
@@ -139,6 +140,7 @@ class BridgeWidget : public QWidget
 
         const int bridge_delay = 150;
 
+        void addDeviceState(QJsonObject json);
         void addGroupState(QJsonObject json);
         void addLightState(QJsonObject json);
         void addSceneState(QJsonObject json);
@@ -157,6 +159,7 @@ class BridgeWidget : public QWidget
             bool combined_all = false
         );
 
+        QMap<QString, QString> getLightServicesByGroup(QString id);
         bool checkAnyServiceIsOn(QMapIterator<QString, QString> services, QString type);
         bool checkAllServicesAreOn(QMapIterator<QString, QString> services, QString type);
 

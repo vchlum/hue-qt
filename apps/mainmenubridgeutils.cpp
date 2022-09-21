@@ -31,6 +31,20 @@ ItemState getLightFromJson(QJsonObject json)
     return updateState(state, json);
 }
 
+ItemState getDeviceFromJson(QJsonObject json)
+{
+    ItemState state;
+    state.id = json["id"].toString();
+    state.type = json["type"].toString();
+
+    if (json.contains("metadata")) {
+        state.name = json["metadata"].toObject()["name"].toString();
+        state.archetype = json["metadata"].toObject()["archetype"].toString();
+    }
+
+    return updateState(state, json);
+}
+
 ItemState getGroupFromJson(QJsonObject json)
 {
     ItemState state;
@@ -119,6 +133,15 @@ ItemState updateState(ItemState state, QJsonObject json)
             if (json_service["rtype"].toString() == "grouped_light") {
                 state.grouped_light_rid = json_service["rid"].toString();
             }
+        }
+    }
+
+    if (json.contains("children")) {
+        QJsonArray children = json["children"].toArray();
+        for (int i = 0; i < children.size(); ++i) {
+            QJsonObject json_child = children[i].toObject();
+
+            state.children[json_child["rid"].toString()] = json_child["rtype"].toString();
         }
     }
 
