@@ -71,7 +71,7 @@ QColor ColorWheel::mapColor(int _x, int _y)
 
 void ColorWheel::mousePressEvent(QMouseEvent *e)
 {
-    emit colorPicked(mapColor(e->position().x(), e->position().y()));
+    emit colorPicked(mapColor(e->pos().x(), e->pos().y()));
 
     QWidget::mousePressEvent(e);
 }
@@ -125,7 +125,7 @@ QSize TemperatureBox::sizeHint() const {
 
 void TemperatureBox::mousePressEvent(QMouseEvent *e)
 {
-    int mirek = mirek_maximum - e->position().x() * mirek_size / (width() - margin);
+    int mirek = mirek_maximum - e->pos().x() * mirek_size / (width() - margin);
     emit mirekPicked(mirek);
 
     QWidget::mousePressEvent(e);

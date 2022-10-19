@@ -1,5 +1,5 @@
-find_package(Qt6 COMPONENTS Widgets REQUIRED)
-find_package(Qt6 COMPONENTS Network REQUIRED)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Network REQUIRED)
 
 set(HUE_INCLUDE ${CMAKE_SOURCE_DIR}/include/hue)
 set(HEADER_HUE_LIST
@@ -21,7 +21,7 @@ add_library(hue
     hueutils.cpp
     ${HEADER_HUE_LIST})
 target_include_directories(hue PUBLIC ${HUE_INCLUDE})
-target_link_libraries(hue PRIVATE Qt6::Network)
+target_link_libraries(hue PRIVATE Qt5::Network)
 
 
 
@@ -33,7 +33,7 @@ set(HEADER_MENU_LIST
     ${MENU_INCLUDE}/menuslider.h
     ${MENU_INCLUDE}/menuswitch.h
     ${MENU_INCLUDE}/menuutils.h)
-qt_add_library(menu
+add_library(menu
     ${CMAKE_SOURCE_DIR}/resources/menu_resources.qrc
     menubutton.cpp
     menucolorpicker.cpp
@@ -44,4 +44,4 @@ qt_add_library(menu
     ${HEADER_MENU_LIST}
 )
 target_include_directories(menu PUBLIC ${MENU_INCLUDE})
-target_link_libraries(menu PRIVATE Qt6::Widgets)
+target_link_libraries(menu PRIVATE Qt5::Widgets)

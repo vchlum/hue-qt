@@ -16,6 +16,7 @@
  */
 
 #include "mainmenubridgeutils.h"
+#include <QtMath>
 
 ItemState getLightFromJson(QJsonObject json)
 {

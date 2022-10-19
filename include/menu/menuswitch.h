@@ -20,6 +20,7 @@
 
 #include <QAbstractButton>
 #include <QPropertyAnimation>
+#include <QEnterEvent>
 
 // https://stackoverflow.com/questions/14780517/toggle-switch-in-qt
 

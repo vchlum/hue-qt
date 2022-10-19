@@ -1,0 +1,22 @@
+name: hue-qt
+base: core20
+version: '1.0.0'
+summary: Control Philips Hue lights and syncbox
+description: |
+  This is a project for controlling Philips Hue Bridge and Philips Hue HDMI Syncbox. The application uses the QT framework and it targets Linux.
+
+grade: stable
+confinement: devmode
+
+parts:
+  hue-qt:
+    plugin: cmake
+    source: .
+    build-snaps:
+      - qt515-core20
+    stage-packages:
+      - libqt5gui5
+      - libqt5network5
+apps:
+  hue-qt:
+    command: qt5-launch hue-qt

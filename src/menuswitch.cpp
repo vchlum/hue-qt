@@ -18,6 +18,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QEvent>
+#include <QEnterEvent>
 
 #include "menuswitch.h"
 
