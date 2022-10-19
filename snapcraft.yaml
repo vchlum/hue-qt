@@ -8,15 +8,27 @@ description: |
 grade: stable
 confinement: devmode
 
+architectures:
+  - build-on: amd64
+    run-on: amd64
+
+environment:
+  SNAP_DESKTOP_RUNTIME: $SNAP/qt515-core20
+
+apps:
+  hue-qt:
+    command: bin/desktop-launch $SNAP/usr/bin/hue-qt
+    desktop: usr/share/applications/hue-qt.desktop
+
+plugs:
+  qt515-core20:
+    interface: content
+    target: $SNAP/qt515-core20
+    default-provider: qt515-core20
+
 parts:
   hue-qt:
     plugin: cmake
     source: .
-    build-snaps:
-      - qt515-core20
-    stage-packages:
-      - libqt5gui5
-      - libqt5network5
-apps:
-  hue-qt:
-    command: qt5-launch hue-qt
+    build-packages: [qt515base, qt515tools]
+
