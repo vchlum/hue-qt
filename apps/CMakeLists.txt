@@ -1,5 +1,6 @@
 find_package(Qt6 COMPONENTS Gui REQUIRED)
 find_package(Qt6 COMPONENTS Widgets REQUIRED)
+find_package(Qt6 COMPONENTS Network REQUIRED)
 
 qt_add_executable(hue-qt
     ${CMAKE_SOURCE_DIR}/resources/resources.qrc
